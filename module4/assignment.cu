@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 
 __global__ void addCUDA(int *threadCountList, int *randNumList, int *resultList) { 
 	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
@@ -84,17 +83,18 @@ void pinnedMemoryOperations(int numBlocks, int totalThreads, int* threadCountLis
 	int subresultList[totalThreads];
 	int multresultList[totalThreads];
 	int modresultList[totalThreads];
-	int *dev_threadCountList, *dev_randNumList, *dev_resultList;
+	int *dev_threadCountList, *dev_randNumList, *dev_addList, *dev_resultList;
 
 	cudaMallocHost((void**)&dev_threadCountList, totalThreads * sizeof(int));
 	cudaMallocHost((void**)&dev_randNumList, totalThreads * sizeof(int));
+	cudaMallocHost((void**)&dev_addList, totalThreads * sizeof(int));
 	cudaMallocHost((void**)&dev_resultList, totalThreads * sizeof(int));
 
 	memcpy(dev_threadCountList, threadCountList, totalThreads * sizeof(int));
 	memcpy(dev_randNumList, randNumList, totalThreads * sizeof(int));
 	
-	addCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
-	memcpy(addresultList, dev_resultList, totalThreads * sizeof(int)); 
+	addCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_addList);
+	memcpy(addresultList, dev_addList, totalThreads * sizeof(int)); 
 
 	subCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
 	memcpy(subresultList, dev_resultList, totalThreads * sizeof(int)); 
