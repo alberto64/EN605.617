@@ -127,8 +127,10 @@ void runOperationsOnHost(int numBlocks, int totalThreads, int* threadCountList, 
 	cudaMalloc((void**)&dev_resultList, totalThreads * sizeof(int));
 
 	// Copy inputs into device memory
-	cudaMemcpy(dev_threadCountList, threadCountList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
-	cudaMemcpy(dev_randNumList, randNumList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
+	cudaHostGetDevicePointer(&dev_threadCountList, threadCountList, 0);
+	cudaHostGetDevicePointer(&dev_randNumList, randNumList, 0);
+	// cudaMemcpy(dev_threadCountList, threadCountList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
+	// cudaMemcpy(dev_randNumList, randNumList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
 	
 	// Execute each operation and bring result from device to host
 	addCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
