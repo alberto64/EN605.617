@@ -93,10 +93,11 @@ void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* r
 	modCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
 	cudaMemcpy(modresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
-	printArray("Add Result", addresultList, totalThreads);
-	printArray("Sub Result", subresultList, totalThreads);
-	printArray("Mult Result", multresultList, totalThreads);
-	printArray("Mod Result", modresultList, totalThreads);
+	// Turned of to minimize printing
+	// printArray("Add Result", addresultList, totalThreads);
+	// printArray("Sub Result", subresultList, totalThreads);
+	// printArray("Mult Result", multresultList, totalThreads);
+	// printArray("Mod Result", modresultList, totalThreads);
 	
 	// Free reserved memory
 	cudaFree(dev_threadCountList);
@@ -129,8 +130,6 @@ void runOperationsOnHost(int numBlocks, int totalThreads, int* threadCountList, 
 	// Copy inputs into device memory
 	cudaHostGetDevicePointer(&dev_threadCountList, threadCountList, 0);
 	cudaHostGetDevicePointer(&dev_randNumList, randNumList, 0);
-	// cudaMemcpy(dev_threadCountList, threadCountList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
-	// cudaMemcpy(dev_randNumList, randNumList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
 	
 	// Execute each operation and bring result from device to host
 	addCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
@@ -145,10 +144,11 @@ void runOperationsOnHost(int numBlocks, int totalThreads, int* threadCountList, 
 	modCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
 	cudaMemcpy(modresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
-	printArray("Add Result", addresultList, totalThreads);
-	printArray("Sub Result", subresultList, totalThreads);
-	printArray("Mult Result", multresultList, totalThreads);
-	printArray("Mod Result", modresultList, totalThreads);
+	// Turned of to minimize printing
+	// printArray("Add Result", addresultList, totalThreads);
+	// printArray("Sub Result", subresultList, totalThreads);
+	// printArray("Mult Result", multresultList, totalThreads);
+	// printArray("Mod Result", modresultList, totalThreads);
 	
 	// Free reserved memory
 	cudaFree(dev_threadCountList);
@@ -187,6 +187,8 @@ int main(int argc, char** argv)
 		printf("The total number of threads will be rounded up to %d\n", totalThreads);
 	}
 
+	printf("Total Threads: %d\nBlock Size: %d\n", totalThreads, blockSize);
+
 	// Set up variables for timing
 	clock_t start, end;
 	double timePassedMiliSeconds;
@@ -212,11 +214,11 @@ int main(int argc, char** argv)
 	memcpy(pinned_randNumList, randNumList, totalThreads * sizeof(int));
 	
 	// Show generated values
-	//printArray("Thread Count List", threadCountList, totalThreads);
-	//printArray("Random Number List", randNumList, totalThreads);
+	// Turned of to minimize printing
+	// printArray("Thread Count List", threadCountList, totalThreads);
+	// printArray("Random Number List", randNumList, totalThreads);
 	
 	// Run and time operations using paged memory
-	//printf("\nPaged Memorry\n");
 	start = clock();
 	runOperations(numBlocks, totalThreads, threadCountList, randNumList);
 	end = clock();
@@ -224,7 +226,6 @@ int main(int argc, char** argv)
 	printf("\nPaged Memory Time: %f Miliseconds\n", timePassedMiliSeconds);
 
 	// Run and time operations using paged memory
-	//printf("\nPinned Memorry\n");
 	start = clock();
 	runOperationsOnHost(numBlocks, totalThreads, pinned_threadCountList, pinned_randNumList);
 	end = clock();
@@ -234,8 +235,6 @@ int main(int argc, char** argv)
 	// Free reserved memory
 	cudaFreeHost(pinned_threadCountList);
 	cudaFreeHost(pinned_randNumList);
-
-	printf("\nEND\n");
 	
 	return 0;
 }
