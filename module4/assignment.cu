@@ -170,10 +170,10 @@ int main(int argc, char** argv)
 	runOperations(numBlocks, totalThreads, pinned_threadCountList, pinned_randNumList);
 	end = clock();
 	time = ((double) (end - start)) / CLOCKS_PER_SEC;
-	printf("\nPaged Memory Time: %f\n", time);
+	printf("\nPinned Memory Time: %f\n", time);
 
-	cudaFree(pinned_threadCountList);
-	cudaFree(pinned_randNumList);
+	cudaFreeHost(pinned_threadCountList);
+	cudaFreeHost(pinned_randNumList);
 
 	printf("\nEND\n");
 	
