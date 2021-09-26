@@ -1,11 +1,61 @@
 //Based on the work of Andrew Krepps
 #include <stdio.h>
+#include <time.h>
+#include <pthread.h>
 
-struct ThreadVariables {
-	int threadCountList[];
- 	int randNumList[];
-	int resultList[];
-};
+// struct ThreadVariables {
+// 	int threadCountList[];
+//  	int randNumList[];
+// 	int resultList[];
+// };
+
+__global__ void addCUDA(int *threadCountList, int *randNumList, int *resultList) { 
+	int idx = threadIdx.x + blockIdx.x * blockDim.x; 
+	resultList[idx] = threadCountList[idx] + randNumList[idx]; 
+}
+
+__global__ void subCUDA(int *threadCountList, int *randNumList, int *resultList) { 
+	int idx = threadIdx.x + blockIdx.x * blockDim.x; 
+	resultList[idx] = threadCountList[idx] - randNumList[idx]; 
+}
+
+__global__ void multCUDA(int *threadCountList, int *randNumList, int *resultList) { 
+	int idx = threadIdx.x + blockIdx.x * blockDim.x; 
+	resultList[idx] = threadCountList[idx] * randNumList[idx]; 
+}
+
+__global__ void modCUDA(int *threadCountList, int *randNumList, int *resultList) { 
+	int idx = threadIdx.x + blockIdx.x * blockDim.x; 
+	resultList[idx] = threadCountList[idx] % randNumList[idx]; 
+}
+
+void add(int *threadCountList, int *randNumList, int *resultList, int thread_idx) { 
+	resultList[thread_idx] = threadCountList[thread_idx] + randNumList[thread_idx]; 
+}
+
+void sub(int *threadCountList, int *randNumList, int *resultList, int thread_idx) { 
+	resultList[thread_idx] = threadCountList[thread_idx] - randNumList[thread_idx]; 
+}
+
+void mult(int *threadCountList, int *randNumList, int *resultList, int thread_idx) { 
+	resultList[thread_idx] = threadCountList[thread_idx] * randNumList[thread_idx]; 
+}
+
+void mod(int *threadCountList, int *randNumList, int *resultList, int thread_idx) { 
+	resultList[thread_idx] = threadCountList[thread_idx] % randNumList[thread_idx]; 
+}
+
+// void cpuMain(void* threadVariables) {
+	
+// 	// Initialize operation arrays
+// 	struct ThreadVariables *cpuVariables = (struct ThreadVariables*)threadVariables;
+// 	thread_idx = pthread_getthreadid_np();
+
+// 	add((*cpuVariables).threadCountList, (*cpuVariables).randNumList , (*cpuVariables).resultList , (int) thread_idx);
+// 	sub((*cpuVariables).threadCountList, (*cpuVariables).randNumList , (*cpuVariables).resultList , (int) thread_idx);
+// 	mult((*cpuVariables).threadCountList, (*cpuVariables).randNumList , (*cpuVariables).resultList , (int) thread_idx);
+// 	mod((*cpuVariables).threadCountList, (*cpuVariables).randNumList , (*cpuVariables).resultList , (int) thread_idx);
+// }
 
 int main(int argc, char** argv)
 {
@@ -34,17 +84,18 @@ int main(int argc, char** argv)
 	int arraySize = totalThreads;
 
 	// Initialize operation arrays
-	pthread_t threads[arraySize];
+	// pthread_t threads[arraySize];
 	int threadCountList[arraySize];
  	int randNumList[arraySize];
-	int resultList[arraySize];
+	// int resultList[arraySize];
+	clock_t start, end;
 
-	struct ThreadVariables *cpuVar;
-    cpuVar = malloc(sizeof(struct threadVariables));
+	// struct ThreadVariables *cpuVar;
+    // cpuVar = malloc(sizeof(struct threadVariables));
 
-	(*cpuVar).threadCountList = threadCountList;
-	(*cpuVar).randNumList = randNumList;
-	(*cpuVar).resultList = resultList;
+	// (*cpuVar).threadCountList = threadCountList;
+	// (*cpuVar).randNumList = randNumList;
+	// (*cpuVar).resultList = resultList;
 
    	// Populate elements of both arrays          
    	for ( int idx = 0; idx < arraySize; idx++ ) {
@@ -52,8 +103,8 @@ int main(int argc, char** argv)
 		randNumList[idx] = rand() % 4;
    	}
 
-	// Test using gpu threads
-	int *dev_threadCountList, *dev_randNumList, *dev_c;
+	// Test using gpu threadsusing host memory cuda
+	int *dev_threadCountList, *dev_randNumList, *dev_resultList;
 	
 	cudaMalloc((void**)&dev_threadCountList, arraySize * sizeof(int));
 	
@@ -65,14 +116,14 @@ int main(int argc, char** argv)
 	
 	cudaMemcpy(dev_randNumList, randNumList, arraySize * sizeof(int), cudaMemcpyHostToDevice);
 
-	auto start = std::chrono::high_resolution_clock::now();
+	start = clock();
 	
 	addCUDA<<<numBlocks,blockSize>>> (dev_threadCountList, dev_randNumList, dev_resultList);
 	subCUDA<<<numBlocks,blockSize>>> (dev_threadCountList, dev_randNumList, dev_resultList);
 	multCUDA<<<numBlocks,blockSize>>> (dev_threadCountList, dev_randNumList, dev_resultList);
 	modCUDA<<<numBlocks,blockSize>>> (dev_threadCountList, dev_randNumList, dev_resultList);
 	
-	auto stop = std::chrono::high_resolution_clock::now();
+	end = clock();
 
 	cudaFree(dev_threadCountList);
 	
@@ -80,71 +131,23 @@ int main(int argc, char** argv)
 	
 	cudaFree(dev_resultList);
 
-	std::cout <endl<< " Time elapsed on GPU: " << std::chrono::duration_castchrono::nanoseconds>(stop - start).count() << "ns\n";
+	printf("Time elapsed on GPU: %f s\n", (double) ((end - start) / CLOCKS_PER_SEC));
 
-	// Test using cpu threads
-	auto startCpu = std::chrono::high_resolution_clock::now();
+	// // Test using cpu threads
+	// auto startCpu = std::chrono::high_resolution_clock::now();
 
 
-	for(int idx = 0; idx < arraySize ; idx++) {
-		thread = pthread_create(&threads[idx], NULL, cpuMain, (void *)cpuVar)
-		if (thread) {
-			printf("Error:unable to create thread, %d\n", thread);
-			exit(-1);
-		}
-	}
+	// for(int idx = 0; idx < arraySize ; idx++) {
+	// 	thread = pthread_create(&threads[idx], NULL, cpuMain, (void *)cpuVar);
+	// 	if (thread) {
+	// 		printf("Error:unable to create thread, %d\n", thread);
+	// 		exit(-1);
+	// 	}
+	// }
 
-	auto stopCpu = std::chrono::high_resolution_clock::now();
+	// auto stopCpu = std::chrono::high_resolution_clock::now();
 
-	std::cout << " Time elapsed on CPU: " << std::chrono::duration_castchrono::nanoseconds>(stopCpu - startCpu).count() << "ns\n";
+	// std::cout << " Time elapsed on CPU: " << std::chrono::duration_castchrono::nanoseconds>(stopCpu - startCpu).count() << "ns\n";
 
 	return 0;
-}
-
-void cpuMain(void* threadVariables) {
-	
-	// Initialize operation arrays
-	struct ThreadVariables *cpuVariables = (struct ThreadVariables*)threadVariables;
-	thread_idx = pthread_getthreadid_np();
-
-	add((*cpuVariables).threadCountList, (*cpuVariables).randNumList , (*cpuVariables).resultList , (int) thread_idx);
-	sub((*cpuVariables).threadCountList, (*cpuVariables).randNumList , (*cpuVariables).resultList , (int) thread_idx);
-	mult((*cpuVariables).threadCountList, (*cpuVariables).randNumList , (*cpuVariables).resultList , (int) thread_idx);
-	mod((*cpuVariables).threadCountList, (*cpuVariables).randNumList , (*cpuVariables).resultList , (int) thread_idx);
-}
-
-void addCUDA(int *threadCountList, int *randNumList, int *resultList) { 
-	int idx = threadIdx.x + blockIdx.x * blockDim.x; 
-	resultList[idx] = threadCountList[idx] + randNumList[idx]; 
-}
-
-void subCUDA(int *threadCountList, int *randNumList, int *resultList) { 
-	int idx = threadIdx.x + blockIdx.x * blockDim.x; 
-	resultList[idx] = threadCountList[idx] - randNumList[idx]; 
-}
-
-void multCUDA(int *threadCountList, int *randNumList, int *resultList) { 
-	int idx = threadIdx.x + blockIdx.x * blockDim.x; 
-	resultList[idx] = threadCountList[idx] * randNumList[idx]; 
-}
-
-void modCUDA(int *threadCountList, int *randNumList, int *resultList) { 
-	int idx = threadIdx.x + blockIdx.x * blockDim.x; 
-	resultList[idx] = threadCountList[idx] % randNumList[idx]; 
-}
-
-void add(int *threadCountList, int *randNumList, int *resultList, int thread_idx) { 
-	resultList[thread_idx] = threadCountList[thread_idx] + randNumList[thread_idx]; 
-}
-
-void sub(int *threadCountList, int *randNumList, int *resultList, int thread_idx) { 
-	resultList[thread_idx] = threadCountList[thread_idx] - randNumList[thread_idx]; 
-}
-
-void mult(int *threadCountList, int *randNumList, int *resultList, int thread_idx) { 
-	resultList[thread_idx] = threadCountList[thread_idx] * randNumList[thread_idx]; 
-}
-
-void mod(int *threadCountList, int *randNumList, int *resultList, int thread_idx) { 
-	resultList[thread_idx] = threadCountList[thread_idx] % randNumList[thread_idx]; 
 }
