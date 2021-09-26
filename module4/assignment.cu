@@ -94,10 +94,10 @@ void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* r
 	cudaMemcpy(modresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
 	// Turned of to minimize printing
-	printArray("Add Result", addresultList, totalThreads);
-	printArray("Sub Result", subresultList, totalThreads);
-	printArray("Mult Result", multresultList, totalThreads);
-	printArray("Mod Result", modresultList, totalThreads);
+	// printArray("Add Result", addresultList, totalThreads);
+	// printArray("Sub Result", subresultList, totalThreads);
+	// printArray("Mult Result", multresultList, totalThreads);
+	// printArray("Mod Result", modresultList, totalThreads);
 	
 	// Free reserved memory
 	cudaFree(dev_threadCountList);
@@ -145,10 +145,10 @@ void runOperationsOnHost(int numBlocks, int totalThreads, int* threadCountList, 
 	cudaDeviceSynchronize();
 
 	// Turned of to minimize printing
-	printArray("Add Result", addresultList, totalThreads);
-	printArray("Sub Result", subresultList, totalThreads);
-	printArray("Mult Result", multresultList, totalThreads);
-	printArray("Mod Result", modresultList, totalThreads);
+	// printArray("Add Result", addresultList, totalThreads);
+	// printArray("Sub Result", subresultList, totalThreads);
+	// printArray("Mult Result", multresultList, totalThreads);
+	// printArray("Mod Result", modresultList, totalThreads);
 	
 	// Free reserved memory
 	cudaFree(dev_threadCountList);
