@@ -129,8 +129,8 @@ int main(int argc, char** argv)
 	}
 
 	// Set up variables for timing
-	time_t start, end;
-	double timePassed;
+	clock_t start, end;
+	double timePassedMiliSeconds;
 
 	// Set up paged memory space 
 	int* threadCountList = (int*) malloc(totalThreads * sizeof(int));
@@ -158,19 +158,19 @@ int main(int argc, char** argv)
 	
 	// Run and time operations using paged memory
 	//printf("\nPaged Memorry\n");
-	start = time(NULL);
+	start = clock();
 	runOperations(numBlocks, totalThreads, threadCountList, randNumList);
-	end = time(NULL);
-	timePassed = (double) end - start;
-	printf("\nPaged Memory Time: %f\n", timePassed);
+	end = clock();
+	timePassedMiliSeconds = (double) (end - start) * 1000 / CLOCKS_PER_SEC;
+	printf("\nPaged Memory Time: %f\n", timePassedMiliSeconds);
 
 	// Run and time operations using paged memory
 	//printf("\nPinned Memorry\n");
-	start = time(NULL);
+	start = clock();
 	runOperations(numBlocks, totalThreads, pinned_threadCountList, pinned_randNumList);
-	end = time(NULL);
-	timePassed = (double) end - start;
-	printf("\nPinned Memory Time: %f\n", timePassed);
+	end = clock();
+	timePassedMiliSeconds = (double) (end - start) * 1000 / CLOCKS_PER_SEC;
+	printf("\nPinned Memory Time: %f\n", timePassedMiliSeconds);
 
 	cudaFreeHost(pinned_threadCountList);
 	cudaFreeHost(pinned_randNumList);
