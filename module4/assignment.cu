@@ -89,10 +89,10 @@ void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* r
 	modCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
 	cudaMemcpy(modresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
-	printArray("Add Result", addresultList, totalThreads);
-	printArray("Sub Result", subresultList, totalThreads);
-	printArray("Mult Result", multresultList, totalThreads);
-	printArray("Mod Result", modresultList, totalThreads);
+	//printArray("Add Result", addresultList, totalThreads);
+	//printArray("Sub Result", subresultList, totalThreads);
+	//printArray("Mult Result", multresultList, totalThreads);
+	//printArray("Mod Result", modresultList, totalThreads);
 	
 	cudaFree(dev_threadCountList);
 
@@ -153,11 +153,11 @@ int main(int argc, char** argv)
 	memcpy(pinned_randNumList, randNumList, totalThreads * sizeof(int));
 	
 	// Show generated values
-	printArray("Thread Count List", threadCountList, totalThreads);
-	printArray("Random Number List", randNumList, totalThreads);
+	//printArray("Thread Count List", threadCountList, totalThreads);
+	//printArray("Random Number List", randNumList, totalThreads);
 	
 	// Run and time operations using paged memory
-	printf("\nPaged Memorry\n");
+	//printf("\nPaged Memorry\n");
 	start = clock();
 	runOperations(numBlocks, totalThreads, threadCountList, randNumList);
 	end = clock();
@@ -165,7 +165,7 @@ int main(int argc, char** argv)
 	printf("\nPaged Memory Time: %f\n", time);
 
 	// Run and time operations using paged memory
-	printf("\nPinned Memorry\n");
+	//printf("\nPinned Memorry\n");
 	start = clock();
 	runOperations(numBlocks, totalThreads, pinned_threadCountList, pinned_randNumList);
 	end = clock();
