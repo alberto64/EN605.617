@@ -106,8 +106,8 @@ int main(int argc, char** argv)
 	// Based on the work of Andrew Krepps
 	
 	// Set default values in case arguments don't come in command line.
-	int totalThreads = 64;
-	int blockSize = 4;
+	int totalThreads = 1024;
+	int blockSize = 256;
 
 	// read command line arguments
 	if (argc >= 2) {
@@ -162,7 +162,7 @@ int main(int argc, char** argv)
 	runOperations(numBlocks, totalThreads, threadCountList, randNumList);
 	end = clock();
 	time = ((double) (end - start)) / CLOCKS_PER_SEC;
-	printf("\nPaged Memory Time: %f0.2\n", time);
+	printf("\nPaged Memory Time: %f\n", time);
 
 	// Run and time operations using paged memory
 	printf("\nPinned Memorry\n");
@@ -170,7 +170,7 @@ int main(int argc, char** argv)
 	runOperations(numBlocks, totalThreads, pinned_threadCountList, pinned_randNumList);
 	end = clock();
 	time = ((double) (end - start)) / CLOCKS_PER_SEC;
-	printf("\nPaged Memory Time: %f0.2\n", time);
+	printf("\nPaged Memory Time: %f\n", time);
 
 	cudaFree(pinned_threadCountList);
 	cudaFree(pinned_randNumList);
