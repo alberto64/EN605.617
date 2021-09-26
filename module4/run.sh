@@ -1,6 +1,6 @@
-nvcc assignment.cu -o assignment.sh
-./assignment.sh 64 1
-./assignment.sh 256 4
-./assignment.sh 
-./assignment.sh 6240 520
-./assignment.sh 1000000 5000
+nvcc operations.cu -o operations.sh
+./operations.sh 64 1
+./operations.sh 256 4
+./operations.sh 
+./operations.sh 6240 520
+./operations.sh 1000000 5000

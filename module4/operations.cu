@@ -37,16 +37,6 @@ __global__ void modCUDA(const int *threadCountList, const int *randNumList, int 
 	resultList[idx] = threadCountList[idx] % randNumList[idx]; 
 }
 
-// __global__ void ceasarCypherEncryptCUDA(int cypherKey, char *stringToEncrypt, char *resultString) { 
-// 	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
-// 	resultString[idx] = stringToEncrypt[idx] + cypherKey; 
-// }
-
-// __global__ void ceasarCypherDecryptCUDA(int cypherKey, char *stringToDecrypt, char *resultString) { 
-// 	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
-// 	resultString[idx] = stringToDecrypt[idx] - cypherKey; 
-// }
-
 /**
 * printArray: A method that takes in an a label and an array with its size and it feeds it to printf.
 */
@@ -103,6 +93,10 @@ void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* r
 	cudaFree(dev_threadCountList);
 	cudaFree(dev_randNumList);
 	cudaFree(dev_resultList);
+	free(addresultList);
+	free(subresultList);
+	free(multresultList);
+	free(modresultList);
 }
 
 /**
@@ -161,6 +155,10 @@ void runOperationsOnHost(int numBlocks, int totalThreads, int* threadCountList, 
 	cudaFreeHost(subresultList);
 	cudaFreeHost(multresultList);
 	cudaFreeHost(modresultList);
+	free(addresultList);
+	free(subresultList);
+	free(multresultList);
+	free(modresultList);
 }
 
 int main(int argc, char** argv)
@@ -238,6 +236,8 @@ int main(int argc, char** argv)
 	// Free reserved memory
 	cudaFreeHost(pinned_threadCountList);
 	cudaFreeHost(pinned_randNumList);
+	free(threadCountList);
+	free(randNumList);
 	
 	return 0;
 }
