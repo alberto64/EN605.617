@@ -7,19 +7,13 @@
 */
 __global__ void ceasarCypherEncryptCUDA(int cypherKey, char *stringToEncrypt, char *resultString) { 
 	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
-	resultString[idx] = stringToEncrypt[idx] + cypherKey; 
-}
-
-
-/**
-* printArray: A method that takes in an a label and an array with its size and it feeds it to printf.
-*/
-void printWord(const char* name, char *array, int size) {
-	printf("\n%s: ", name);
-	for(int idx = 0; idx < size; idx++) {
-		printf("%c", array[idx]);
+	if (int(stringToEncrypt[idx]) >= 65 && int(stringToEncrypt[idx]) < 91) {
+		resultString[idx] = char(int(stringToEncrypt[idx] + cypherKey - 65) % 26 + 65);
+	} else if (int(stringToEncrypt[idx]) >= 97 && int(stringToEncrypt[idx]) < 123) {
+		resultString[idx] = char(int(stringToEncrypt[idx] + cypherKey - 97) % 26 + 97);
+	} else {
+		resultString[idx] = stringToEncrypt[idx];
 	}
-	printf("\n");
 }
 
 /**
@@ -45,7 +39,7 @@ void runCypher(int numBlocks, int totalThreads, int cipherKey, char* word) {
 	cudaMemcpy(encryptedWord, dev_encryptedWord, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
 	// Turned of to minimize printing
-	printWord("Paged Word", encryptedWord, totalThreads);
+	printf("\nPaged Word: %s\n", encryptedWord);
 
 	
 	// Free reserved memory
@@ -80,9 +74,8 @@ void runCypherOnHost(int numBlocks, int totalThreads, int cipherKey, char* word)
 	cudaDeviceSynchronize();
 
 	// Turned of to minimize printing
-	printWord("Pinned Word", encryptedWord, totalThreads);
+	printf("\nPinned Word: %s\n", encryptedWord);
 
-	
 	// Free reserved memory
 	cudaFree(dev_word);
 	cudaFree(dev_encryptedWord);
@@ -107,7 +100,7 @@ int main(int argc, char** argv)
 	int totalThreads = sizeof(word);
 	int numBlocks = 1;
 	
-	printf("Total Threads: %d\nBlock Count: %d\n, Word: %s\n", totalThreads, numBlocks, word);
+	printf("Total Threads: %d\nBlock Count: %d\nWord: %s\n", totalThreads, numBlocks, word);
 
 	// Set up variables for timing
 	clock_t start, end;
