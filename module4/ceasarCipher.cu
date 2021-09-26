@@ -45,7 +45,6 @@ void runCypher(int numBlocks, int totalThreads, int cipherKey, char* word) {
 	// Free reserved memory
 	cudaFree(dev_word);
 	cudaFree(dev_encryptedWord);
-	free(encryptedWord);
 }
 
 /**

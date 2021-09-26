@@ -93,10 +93,6 @@ void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* r
 	cudaFree(dev_threadCountList);
 	cudaFree(dev_randNumList);
 	cudaFree(dev_resultList);
-	free(addresultList);
-	free(subresultList);
-	free(multresultList);
-	free(modresultList);
 }
 
 /**
@@ -155,10 +151,6 @@ void runOperationsOnHost(int numBlocks, int totalThreads, int* threadCountList, 
 	cudaFreeHost(subresultList);
 	cudaFreeHost(multresultList);
 	cudaFreeHost(modresultList);
-	free(addresultList);
-	free(subresultList);
-	free(multresultList);
-	free(modresultList);
 }
 
 int main(int argc, char** argv)
@@ -236,8 +228,6 @@ int main(int argc, char** argv)
 	// Free reserved memory
 	cudaFreeHost(pinned_threadCountList);
 	cudaFreeHost(pinned_randNumList);
-	free(threadCountList);
-	free(randNumList);
 	
 	return 0;
 }
