@@ -1,20 +1,37 @@
 #include <stdio.h>
+#include <time.h>
 
+/**
+* addCuda: A method that add two arrays and places the result in a third array using 
+* multithreading for index calculation.
+*/
 __global__ void addCUDA(const int *threadCountList, const int *randNumList, int *resultList) { 
 	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
 	resultList[idx] = threadCountList[idx] + randNumList[idx]; 
 }
 
+/**
+* subCuda: A method that substract two arrays and places the result in a third array using 
+* multithreading for index calculation.
+*/
 __global__ void subCUDA(const int *threadCountList, const int *randNumList, int *resultList) { 
 	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
 	resultList[idx] = threadCountList[idx] - randNumList[idx]; 
 }
 
+/**
+* multCuda: A method that multiplies two arrays and places the result in a third array using 
+* multithreading for index calculation.
+*/
 __global__ void multCUDA(const int *threadCountList, const int *randNumList, int *resultList) { 
 	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
 	resultList[idx] = threadCountList[idx] * randNumList[idx]; 
 }
 
+/**
+* modCuda: A method that does the modulus between two arrays and places the result in a third 
+* array using multithreading for index calculation.
+*/
 __global__ void modCUDA(const int *threadCountList, const int *randNumList, int *resultList) { 
 	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
 	resultList[idx] = threadCountList[idx] % randNumList[idx]; 
@@ -30,14 +47,21 @@ __global__ void modCUDA(const int *threadCountList, const int *randNumList, int 
 // 	resultString[idx] = stringToDecrypt[idx] - cypherKey; 
 // }
 
+/**
+* printArray: A method that takes in an a label and an array with its size and it feeds it to printf.
+*/
 void printArray(const char* name, int *array, int size) {
 	printf("\n%s: [ ", name);
 	for(int idx = 0; idx < size; idx++) {
 		printf("%i ", array[idx]);
 	}
-	printf("]");
+	printf("]\n");
 }
 
+/**
+* runOperations: Taking the number of blocks and threads it does 4 operations on the two 
+* given arrays and prints their results.
+*/
 void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* randNumList) { 
 	
 	int* addresultList = (int*) malloc(totalThreads * sizeof(int));
@@ -80,10 +104,12 @@ void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* r
 int main(int argc, char** argv)
 {
 	// Based on the work of Andrew Krepps
-	// read command line arguments
+	
+	// Set default values in case arguments don't come in command line.
 	int totalThreads = 64;
 	int blockSize = 4;
 
+	// read command line arguments
 	if (argc >= 2) {
 		totalThreads = atoi(argv[1]);
 	}
@@ -101,6 +127,10 @@ int main(int argc, char** argv)
 		printf("Warning: Total thread count is not evenly divisible by the block size\n");
 		printf("The total number of threads will be rounded up to %d\n", totalThreads);
 	}
+
+	// Set up variables for timing
+	clock_t start, end;
+	double time;
 
 	// Set up paged memory space 
 	int* threadCountList = (int*) malloc(totalThreads * sizeof(int));
@@ -122,20 +152,30 @@ int main(int argc, char** argv)
 	memcpy(pinned_threadCountList, threadCountList, totalThreads * sizeof(int));  
 	memcpy(pinned_randNumList, randNumList, totalThreads * sizeof(int));
 	
-
+	// Show generated values
 	printArray("Thread Count List", threadCountList, totalThreads);
 	printArray("Random Number List", randNumList, totalThreads);
 	
+	// Run and time operations using paged memory
 	printf("\nPaged Memorry\n");
+	start = clock();
 	runOperations(numBlocks, totalThreads, threadCountList, randNumList);
+	end = clock();
+	time = ((double) (end - start)) / CLOCKS_PER_SEC;
+	printf("\nPaged Memory Time: %f0.2\n", time);
 
+	// Run and time operations using paged memory
 	printf("\nPinned Memorry\n");
+	start = clock();
 	runOperations(numBlocks, totalThreads, pinned_threadCountList, pinned_randNumList);
+	end = clock();
+	time = ((double) (end - start)) / CLOCKS_PER_SEC;
+	printf("\nPaged Memory Time: %f0.2\n", time);
 
 	cudaFree(pinned_threadCountList);
 	cudaFree(pinned_randNumList);
 
-	printf("\nEND");
+	printf("\nEND\n");
 	
 	return 0;
 }
