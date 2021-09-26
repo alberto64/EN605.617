@@ -94,10 +94,10 @@ void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* r
 	cudaMemcpy(modresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
 	// Turned of to minimize printing
-	// printArray("Add Result", addresultList, totalThreads);
-	// printArray("Sub Result", subresultList, totalThreads);
-	// printArray("Mult Result", multresultList, totalThreads);
-	// printArray("Mod Result", modresultList, totalThreads);
+	printArray("Add Result", addresultList, totalThreads);
+	printArray("Sub Result", subresultList, totalThreads);
+	printArray("Mult Result", multresultList, totalThreads);
+	printArray("Mod Result", modresultList, totalThreads);
 	
 	// Free reserved memory
 	cudaFree(dev_threadCountList);
@@ -122,38 +122,41 @@ void runOperationsOnHost(int numBlocks, int totalThreads, int* threadCountList, 
 	cudaMallocHost((void**)&modresultList, totalThreads * sizeof(int));
 
 	// Prepare cuda variables
-	int* dev_threadCountList, *dev_randNumList, *dev_resultList;
-	cudaMalloc((void**)&dev_threadCountList, totalThreads * sizeof(int));
-	cudaMalloc((void**)&dev_randNumList, totalThreads * sizeof(int));
-	cudaMalloc((void**)&dev_resultList, totalThreads * sizeof(int));
+	int* dev_threadCountList, *dev_randNumList, *dev_addresultList, *dev_subresultList, *dev_multresultList, *dev_modresultList;
 
 	// Copy inputs into device memory
 	cudaHostGetDevicePointer(&dev_threadCountList, threadCountList, 0);
 	cudaHostGetDevicePointer(&dev_randNumList, randNumList, 0);
 	
 	// Execute each operation and bring result from device to host
-	addCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
-	cudaMemcpy(addresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
+	cudaHostGetDevicePointer(&dev_addresultList, addresultList, 0);
+	addCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_addresultList);
 
-	subCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
-	cudaMemcpy(subresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
+	cudaHostGetDevicePointer(&dev_subresultList, subresultList, 0);
+	subCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_subresultList);
 
-	multCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
-	cudaMemcpy(multresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
+	cudaHostGetDevicePointer(&dev_multresultList, multresultList, 0);
+	multCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_multresultList);
 
-	modCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
-	cudaMemcpy(modresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
+	cudaHostGetDevicePointer(&dev_modresultList, modresultList, 0);
+	modCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_modresultList);
+
+	// Synchonize data between device and host
+	cudaDeviceSynchronize();
 
 	// Turned of to minimize printing
-	// printArray("Add Result", addresultList, totalThreads);
-	// printArray("Sub Result", subresultList, totalThreads);
-	// printArray("Mult Result", multresultList, totalThreads);
-	// printArray("Mod Result", modresultList, totalThreads);
+	printArray("Add Result", addresultList, totalThreads);
+	printArray("Sub Result", subresultList, totalThreads);
+	printArray("Mult Result", multresultList, totalThreads);
+	printArray("Mod Result", modresultList, totalThreads);
 	
 	// Free reserved memory
 	cudaFree(dev_threadCountList);
 	cudaFree(dev_randNumList);
-	cudaFree(dev_resultList);
+	cudaFree(dev_addresultList);
+	cudaFree(dev_subresultList);
+	cudaFree(dev_multresultList);
+	cudaFree(dev_modresultList);
 	cudaFreeHost(addresultList);
 	cudaFreeHost(subresultList);
 	cudaFreeHost(multresultList);

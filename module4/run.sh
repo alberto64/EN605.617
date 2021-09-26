@@ -1,2 +1,2 @@
-nvcc assigment.cu -o assigment.sh
-./assigment.sh
+nvcc assignment.cu -o assignment.sh
+./assignment.sh
