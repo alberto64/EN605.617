@@ -1,21 +1,21 @@
 #include <stdio.h>
 
-__global__ void addCUDA(int *threadCountList, int *randNumList, int *resultList) { 
+__global__ void addCUDA(const int *threadCountList, const int *randNumList, int *resultList) { 
 	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
 	resultList[idx] = threadCountList[idx] + randNumList[idx]; 
 }
 
-__global__ void subCUDA(int *threadCountList, int *randNumList, int *resultList) { 
+__global__ void subCUDA(const int *threadCountList, const int *randNumList, int *resultList) { 
 	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
 	resultList[idx] = threadCountList[idx] - randNumList[idx]; 
 }
 
-__global__ void multCUDA(int *threadCountList, int *randNumList, int *resultList) { 
+__global__ void multCUDA(const int *threadCountList, const int *randNumList, int *resultList) { 
 	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
 	resultList[idx] = threadCountList[idx] * randNumList[idx]; 
 }
 
-__global__ void modCUDA(int *threadCountList, int *randNumList, int *resultList) { 
+__global__ void modCUDA(const int *threadCountList, const int *randNumList, int *resultList) { 
 	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
 	resultList[idx] = threadCountList[idx] % randNumList[idx]; 
 }
@@ -38,13 +38,13 @@ void printArray(const char* name, int *array, int size) {
 	printf("]");
 }
 
-void pagedMemoryOperations(int numBlocks, int totalThreads, int* threadCountList, int* randNumList) { 
+void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* randNumList) { 
 	
-	int addresultList[totalThreads];
-	int subresultList[totalThreads];
-	int multresultList[totalThreads];
-	int modresultList[totalThreads];
-	int *dev_threadCountList, *dev_randNumList, *dev_resultList;
+	int* addresultList = (int*) malloc(totalThreads * sizeof(int));
+	int* subresultList = (int*) malloc(totalThreads * sizeof(int));
+	int* multresultList = (int*) malloc(totalThreads * sizeof(int));
+	int* modresultList = (int*) malloc(totalThreads * sizeof(int));
+	int* dev_threadCountList, *dev_randNumList, *dev_resultList;
 
 	cudaMalloc((void**)&dev_threadCountList, totalThreads * sizeof(int));
 	cudaMalloc((void**)&dev_randNumList, totalThreads * sizeof(int));
@@ -77,46 +77,6 @@ void pagedMemoryOperations(int numBlocks, int totalThreads, int* threadCountList
 	cudaFree(dev_resultList);
 }
 
-void pinnedMemoryOperations(int numBlocks, int totalThreads, int* threadCountList, int* randNumList) { 
-	
-	int addresultList[totalThreads];
-	int subresultList[totalThreads];
-	int multresultList[totalThreads];
-	int modresultList[totalThreads];
-	int *dev_threadCountList, *dev_randNumList, *dev_addList, *dev_resultList;
-
-	cudaMallocHost((void**)&dev_threadCountList, totalThreads * sizeof(int));
-	cudaMallocHost((void**)&dev_randNumList, totalThreads * sizeof(int));
-	cudaMallocHost((void**)&dev_addList, totalThreads * sizeof(int));
-	cudaMallocHost((void**)&dev_resultList, totalThreads * sizeof(int));
-
-	memcpy(dev_threadCountList, threadCountList, totalThreads * sizeof(int));
-	memcpy(dev_randNumList, randNumList, totalThreads * sizeof(int));
-	
-	addCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_addList);
-	memcpy(addresultList, dev_addList, totalThreads * sizeof(int)); 
-
-	subCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
-	memcpy(subresultList, dev_resultList, totalThreads * sizeof(int)); 
-
-	multCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
-	memcpy(multresultList, dev_resultList, totalThreads * sizeof(int)); 
-
-	modCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
-	memcpy(modresultList, dev_resultList, totalThreads * sizeof(int)); 
-
-	printArray("Add Result", addresultList, totalThreads);
-	printArray("Sub Result", subresultList, totalThreads);
-	printArray("Mult Result", multresultList, totalThreads);
-	printArray("Mod Result", modresultList, totalThreads);
-	
-	cudaFreeHost(dev_threadCountList);
-
-	cudaFreeHost(dev_randNumList);
-	
-	cudaFreeHost(dev_resultList);
-}
-
 int main(int argc, char** argv)
 {
 	// Based on the work of Andrew Krepps
@@ -142,21 +102,38 @@ int main(int argc, char** argv)
 		printf("The total number of threads will be rounded up to %d\n", totalThreads);
 	}
 
-	int threadCountList[totalThreads];
-	int randNumList[totalThreads];
+	// Set up paged memory space 
+	int* threadCountList = (int*) malloc(totalThreads * sizeof(int));
+	int* randNumList = (int*) malloc(totalThreads * sizeof(int));
+	
+	// Set up pinned memory space
+	int* pinned_threadCountList;
+	int* pinned_randNumList;
+	cudaMallocHost((void**)&pinned_threadCountList, totalThreads * sizeof(int));
+	cudaMallocHost((void**)&pinned_randNumList, totalThreads * sizeof(int));
 
+	// Populate paged memory arrays
 	for ( int idx = 0; idx < totalThreads; idx++ ) {
     	threadCountList[idx] = idx; 
 		randNumList[idx] = rand() % 4;
    	}
 
+  	// Populate pinned memory arrays
+	memcpy(pinned_threadCountList, threadCountList, totalThreads * sizeof(int));  
+	memcpy(pinned_randNumList, randNumList, totalThreads * sizeof(int));
+	
+
 	printArray("Thread Count List", threadCountList, totalThreads);
 	printArray("Random Number List", randNumList, totalThreads);
 	
-	printf("\nPAGED\n");
-	pagedMemoryOperations(numBlocks, totalThreads, threadCountList, randNumList);
-	printf("\nPINNED\n");
-	pinnedMemoryOperations(numBlocks, totalThreads, threadCountList, randNumList);
+	printf("\nPaged Memorry\n");
+	runOperations(numBlocks, totalThreads, threadCountList, randNumList);
+
+	printf("\nPinned Memorry\n");
+	runOperations(numBlocks, totalThreads, pinned_threadCountList, pinned_randNumList);
+
+	cudaFree(pinned_threadCountList);
+	cudaFree(pinned_randNumList);
 
 	printf("\nEND");
 	
