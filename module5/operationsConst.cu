@@ -13,36 +13,36 @@ __constant__ int* constModresultList;
 * addConstCuda: A method that add two arrays and places the result in a third array using 
 * multithreading for index calculation using constant memory.
 */
-__global__ void addConstCUDA() { 
+__global__ void addConstCUDA(int* resultList) { 
 	const int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
-	constAddresultList[idx] = constThreadCountList[idx] + constRandNumList[idx]; 
+	resultList[idx] = constThreadCountList[idx] + constRandNumList[idx]; 
 }
 
 /**
 * subConstCuda: A method that substract two arrays and places the result in a third array using 
 * multithreading for index calculation using constant memory.
 */
-__global__ void subConstCUDA() { 
+__global__ void subConstCUDA(int* resultList) { 
 	const int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
-	constSubresultList[idx] = constThreadCountList[idx] - constRandNumList[idx]; 
+	resultList[idx] = constThreadCountList[idx] - constRandNumList[idx]; 
 }
 
 /**
 * multConstCuda: A method that multiplies two arrays and places the result in a third array using 
 * multithreading for index calculation using constant memory.
 */
-__global__ void multConstCUDA() { 
+__global__ void multConstCUDA(int* resultList) { 
 	const int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
-	constMultresultList[idx] = constThreadCountList[idx] * constRandNumList[idx]; 
+	resultList[idx] = constThreadCountList[idx] * constRandNumList[idx]; 
 }
 
 /**
 * modConstCuda: A method that does the modulus between two arrays and places the result in a third 
 * array using multithreading for index calculation using constant memory.
 */
-__global__ void modConstCUDA() { 
+__global__ void modConstCUDA(int* resultList) { 
 	const int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
-	constModresultList[idx] = constThreadCountList[idx] % constRandNumList[idx]; 
+	resultList[idx] = constThreadCountList[idx] % constRandNumList[idx]; 
 }
 
 /**
@@ -62,6 +62,8 @@ void printArray(const char* name, const int *array, const int size) {
 */
 void runOperations(const int numBlocks, const int totalThreads, const int *threadCountList, const int *randNumList) { 
 	
+    int *dev_result;
+
 	// Set up input constant variables
 	cudaMemcpyToSymbol(constThreadCountList, &threadCountList, sizeof(int) * totalThreads, 0);
 	cudaMemcpyToSymbol(constRandNumList, &randNumList, sizeof(int) * totalThreads, 0);
@@ -73,20 +75,24 @@ void runOperations(const int numBlocks, const int totalThreads, const int *threa
 	int* modresultList = (int*) malloc(totalThreads * sizeof(int));
 
 	// Execute each operation and bring result from device to host
-	addConstCUDA<<<numBlocks,totalThreads>>> ();
-	cudaDeviceSynchronize();
-	cudaMemcpyFromSymbol(&addresultList, constAddresultList, sizeof(int) * totalThreads, 0);
+	cudaGetSymbolAddress((void **)&dev_result, constAddresultList);
+	addConstCUDA<<<numBlocks,totalThreads>>> (dev_result);
+	//cudaDeviceSynchronize();
+	cudaMemcpyFromSymbol(addresultList, constAddresultList, sizeof(int) * totalThreads, 0);
 
-	subConstCUDA<<<numBlocks,totalThreads>>> ();
-	cudaDeviceSynchronize();
+	cudaGetSymbolAddress((void **)&dev_result, constSubresultList);
+	subConstCUDA<<<numBlocks,totalThreads>>> (dev_result);
+	//cudaDeviceSynchronize();
 	cudaMemcpyFromSymbol(&subresultList, constSubresultList, sizeof(int) * totalThreads, 0);
 
-	multConstCUDA<<<numBlocks,totalThreads>>> ();
-	cudaDeviceSynchronize();
+	cudaGetSymbolAddress((void **)&dev_result, constMultresultList);
+	multConstCUDA<<<numBlocks,totalThreads>>> (dev_result);
+	//cudaDeviceSynchronize();
 	cudaMemcpyFromSymbol(&multresultList, constMultresultList, sizeof(int) * totalThreads, 0);
 
-	modConstCUDA<<<numBlocks,totalThreads>>> ();
-	cudaDeviceSynchronize();
+	cudaGetSymbolAddress((void **)&dev_result, constModresultList);
+	modConstCUDA<<<numBlocks,totalThreads>>> (dev_result);
+	//cudaDeviceSynchronize();
 	cudaMemcpyFromSymbol(&modresultList, constModresultList, sizeof(int) * totalThreads, 0);
 
 	// Turned of to minimize printing
