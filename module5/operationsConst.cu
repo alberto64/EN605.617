@@ -63,8 +63,8 @@ void printArray(const char* name, const int *array, const int size) {
 void runOperations(const int numBlocks, const int totalThreads, const int *threadCountList, const int *randNumList) { 
 	
 	// Set up input constant variables
-	cudaMemcpyToSymbol(constThreadCountList, &threadCountList, sizeof(int) * totalThreads, 0, cudaMemcpyHostToDevice);
-	cudaMemcpyToSymbol(constRandNumList, &randNumList, sizeof(int) * totalThreads, 0, cudaMemcpyHostToDevice);
+	cudaMemcpyToSymbol(constThreadCountList, &threadCountList, sizeof(int) * totalThreads, 0);
+	cudaMemcpyToSymbol(constRandNumList, &randNumList, sizeof(int) * totalThreads, 0);
 
 	// Prepare result array variables
 	int* addresultList = (int*) malloc(totalThreads * sizeof(int));
@@ -75,19 +75,19 @@ void runOperations(const int numBlocks, const int totalThreads, const int *threa
 	// Execute each operation and bring result from device to host
 	addConstCUDA<<<numBlocks,totalThreads>>> ();
 	cudaDeviceSynchronize();
-	cudaMemcpyToSymbol(constAddresultList, &addresultList, sizeof(int) * totalThreads, 0, cudaMemcpyDeviceToHost);
+	cudaMemcpyFromSymbol(addresultList, constAddresultList, sizeof(int) * totalThreads, 0);
 
 	subConstCUDA<<<numBlocks,totalThreads>>> ();
 	cudaDeviceSynchronize();
-	cudaMemcpyToSymbol(constSubresultList, &subresultList, sizeof(int) * totalThreads, 0, cudaMemcpyDeviceToHost);
+	cudaMemcpyFromSymbol(subresultList, constSubresultList, sizeof(int) * totalThreads, 0);
 
 	multConstCUDA<<<numBlocks,totalThreads>>> ();
 	cudaDeviceSynchronize();
-	cudaMemcpyToSymbol(constMultresultList, &multresultList, sizeof(int) * totalThreads, 0, cudaMemcpyDeviceToHost);
+	cudaMemcpyFromSymbol(multresultList, constMultresultList, sizeof(int) * totalThreads, 0);
 
 	modConstCUDA<<<numBlocks,totalThreads>>> ();
 	cudaDeviceSynchronize();
-	cudaMemcpyToSymbol(constModresultList, &modresultList, sizeof(int) * totalThreads, 0, cudaMemcpyDeviceToHost);
+	cudaMemcpyFromSymbol(modresultList, constModresultList, sizeof(int) * totalThreads, 0);
 
 	// Turned of to minimize printing
 	printArray("Add Result", addresultList, totalThreads);
