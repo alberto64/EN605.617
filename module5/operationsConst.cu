@@ -75,19 +75,19 @@ void runOperations(const int numBlocks, const int totalThreads, const int *threa
 	// Execute each operation and bring result from device to host
 	addConstCUDA<<<numBlocks,totalThreads>>> ();
 	cudaDeviceSynchronize();
-	cudaMemcpyFromSymbol(addresultList, constAddresultList, sizeof(int) * totalThreads, 0);
+	cudaMemcpyFromSymbol(&addresultList, constAddresultList, sizeof(int) * totalThreads, 0);
 
 	subConstCUDA<<<numBlocks,totalThreads>>> ();
 	cudaDeviceSynchronize();
-	cudaMemcpyFromSymbol(subresultList, constSubresultList, sizeof(int) * totalThreads, 0);
+	cudaMemcpyFromSymbol(&subresultList, constSubresultList, sizeof(int) * totalThreads, 0);
 
 	multConstCUDA<<<numBlocks,totalThreads>>> ();
 	cudaDeviceSynchronize();
-	cudaMemcpyFromSymbol(multresultList, constMultresultList, sizeof(int) * totalThreads, 0);
+	cudaMemcpyFromSymbol(&multresultList, constMultresultList, sizeof(int) * totalThreads, 0);
 
 	modConstCUDA<<<numBlocks,totalThreads>>> ();
 	cudaDeviceSynchronize();
-	cudaMemcpyFromSymbol(modresultList, constModresultList, sizeof(int) * totalThreads, 0);
+	cudaMemcpyFromSymbol(&modresultList, constModresultList, sizeof(int) * totalThreads, 0);
 
 	// Turned of to minimize printing
 	printArray("Add Result", addresultList, totalThreads);
