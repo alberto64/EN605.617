@@ -65,8 +65,8 @@ void runOperations(const int numBlocks, const int totalThreads, const int *threa
     int *dev_result;
 
 	// Set up input constant variables
-	cudaMemcpyToSymbol(constThreadCountList, &threadCountList, sizeof(int) * totalThreads, 0);
-	cudaMemcpyToSymbol(constRandNumList, &randNumList, sizeof(int) * totalThreads, 0);
+	cudaMemcpyToSymbol(constThreadCountList, &threadCountList, sizeof(int) * totalThreads);
+	cudaMemcpyToSymbol(constRandNumList, &randNumList, sizeof(int) * totalThreads);
 
 	// Prepare result array variables
 	int* addresultList = (int*) malloc(totalThreads * sizeof(int));
@@ -78,22 +78,22 @@ void runOperations(const int numBlocks, const int totalThreads, const int *threa
 	cudaGetSymbolAddress((void **)&dev_result, constAddresultList);
 	addConstCUDA<<<numBlocks,totalThreads>>> (dev_result);
 	//cudaDeviceSynchronize();
-	cudaMemcpyFromSymbol(addresultList, constAddresultList, sizeof(int) * totalThreads, 0);
+	cudaMemcpyFromSymbol(addresultList, constAddresultList, sizeof(int) * totalThreads);
 
 	cudaGetSymbolAddress((void **)&dev_result, constSubresultList);
 	subConstCUDA<<<numBlocks,totalThreads>>> (dev_result);
 	//cudaDeviceSynchronize();
-	cudaMemcpyFromSymbol(&subresultList, constSubresultList, sizeof(int) * totalThreads, 0);
+	cudaMemcpyFromSymbol(&subresultList, constSubresultList, sizeof(int) * totalThreads);
 
 	cudaGetSymbolAddress((void **)&dev_result, constMultresultList);
 	multConstCUDA<<<numBlocks,totalThreads>>> (dev_result);
 	//cudaDeviceSynchronize();
-	cudaMemcpyFromSymbol(&multresultList, constMultresultList, sizeof(int) * totalThreads, 0);
+	cudaMemcpyFromSymbol(&multresultList, constMultresultList, sizeof(int) * totalThreads);
 
 	cudaGetSymbolAddress((void **)&dev_result, constModresultList);
 	modConstCUDA<<<numBlocks,totalThreads>>> (dev_result);
 	//cudaDeviceSynchronize();
-	cudaMemcpyFromSymbol(&modresultList, constModresultList, sizeof(int) * totalThreads, 0);
+	cudaMemcpyFromSymbol(&modresultList, constModresultList, sizeof(int) * totalThreads);
 
 	// Turned of to minimize printing
 	printArray("Add Result", addresultList, totalThreads);
@@ -123,8 +123,8 @@ void runTest(const int numBlocks, const int totalThreads) {
 	
 	// Show generated values
 	// Turned of to minimize printing
-	// printArray("Thread Count List", threadCountList, constTotalThreads);
-	// printArray("Random Number List", randNumList, constTotalThreads);
+	// printArray("Thread Count List", threadCountList, totalThreads);
+	// printArray("Random Number List", randNumList, totalThreads);
 	
 	// Run and time operations using const memory
 	start = clock();
