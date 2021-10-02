@@ -61,6 +61,9 @@ void runOperations(int numBlocks, int totalThreads, int *threadCountList, int *r
 	
 
 	// Set up input constant variables
+	cudaMalloc((void **)&constThreadCountList, totalThreads * sizeof(int));
+	cudaMalloc((void **)&constRandNumList, totalThreads * sizeof(int));
+
 	cudaMemcpyToSymbol(constThreadCountList, &threadCountList, sizeof(int) * totalThreads);
 	cudaMemcpyToSymbol(constRandNumList, &randNumList, sizeof(int) * totalThreads);
 
