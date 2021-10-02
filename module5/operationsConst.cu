@@ -75,15 +75,19 @@ void runOperations(int numBlocks, int totalThreads, int *threadCountList, int *r
 
 	// Execute each operation and bring result from device to host
 	addConstCUDA<<<numBlocks,totalThreads>>> (dev_result);
+	cudaDeviceSynchronize();
 	cudaMemcpy(&addresultList, dev_result, sizeof(int) * totalThreads, cudaMemcpyDeviceToHost);
 
 	subConstCUDA<<<numBlocks,totalThreads>>> (dev_result);
+	cudaDeviceSynchronize();
 	cudaMemcpy(&subresultList, dev_result, sizeof(int) * totalThreads, cudaMemcpyDeviceToHost);
 
 	multConstCUDA<<<numBlocks,totalThreads>>> (dev_result);
+	cudaDeviceSynchronize();
 	cudaMemcpy(&multresultList, dev_result, sizeof(int) * totalThreads, cudaMemcpyDeviceToHost);
 
 	modConstCUDA<<<numBlocks,totalThreads>>> (dev_result);
+	cudaDeviceSynchronize();
 	cudaMemcpy(&modresultList, dev_result, sizeof(int) * totalThreads, cudaMemcpyDeviceToHost);
 
 	cudaDeviceSynchronize();
