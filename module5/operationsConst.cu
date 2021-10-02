@@ -5,9 +5,6 @@
 __constant__ int* constThreadCountList;
 __constant__ int* constRandNumList;
 __constant__ int* constAddresultList;
-__constant__ int* constSubresultList;
-__constant__ int* constMultresultList;
-__constant__ int* constModresultList;
 
 /**
 * addConstCuda: A method that add two arrays and places the result in a third array using 
@@ -60,9 +57,8 @@ void printArray(const char* name, const int *array, const int size) {
 * runOperations: Taking the number of blocks and threads it does 4 operations on the two 
 * given arrays and prints their results. Uses const memory
 */
-void runOperations(const int numBlocks, const int totalThreads, const int *threadCountList, const int *randNumList) { 
+void runOperations(int numBlocks, int totalThreads, int *threadCountList, int *randNumList) { 
 	
-    int *dev_result;
 
 	// Set up input constant variables
 	cudaMemcpyToSymbol(constThreadCountList, &threadCountList, sizeof(int) * totalThreads);
@@ -73,28 +69,25 @@ void runOperations(const int numBlocks, const int totalThreads, const int *threa
 	int* subresultList = (int*) malloc(totalThreads * sizeof(int));
 	int* multresultList = (int*) malloc(totalThreads * sizeof(int));
 	int* modresultList = (int*) malloc(totalThreads * sizeof(int));
+    int *dev_result;
+
+	cudaMalloc((void **)&dev_result, totalThreads * sizeof(int));
 
 	// Execute each operation and bring result from device to host
-	cudaGetSymbolAddress((void **)&dev_result, constAddresultList);
 	addConstCUDA<<<numBlocks,totalThreads>>> (dev_result);
-	//cudaDeviceSynchronize();
-	cudaMemcpyFromSymbol(addresultList, constAddresultList, sizeof(int) * totalThreads);
+	cudaMemcpy(&addresultList, dev_result, sizeof(int) * totalThreads, cudaMemcpyDeviceToHost);
 
-	cudaGetSymbolAddress((void **)&dev_result, constSubresultList);
 	subConstCUDA<<<numBlocks,totalThreads>>> (dev_result);
-	//cudaDeviceSynchronize();
-	cudaMemcpyFromSymbol(&subresultList, constSubresultList, sizeof(int) * totalThreads);
+	cudaMemcpy(&subresultList, dev_result, sizeof(int) * totalThreads, cudaMemcpyDeviceToHost);
 
-	cudaGetSymbolAddress((void **)&dev_result, constMultresultList);
 	multConstCUDA<<<numBlocks,totalThreads>>> (dev_result);
-	//cudaDeviceSynchronize();
-	cudaMemcpyFromSymbol(&multresultList, constMultresultList, sizeof(int) * totalThreads);
+	cudaMemcpy(&multresultList, dev_result, sizeof(int) * totalThreads, cudaMemcpyDeviceToHost);
 
-	cudaGetSymbolAddress((void **)&dev_result, constModresultList);
 	modConstCUDA<<<numBlocks,totalThreads>>> (dev_result);
-	//cudaDeviceSynchronize();
-	cudaMemcpyFromSymbol(&modresultList, constModresultList, sizeof(int) * totalThreads);
+	cudaMemcpy(&modresultList, dev_result, sizeof(int) * totalThreads, cudaMemcpyDeviceToHost);
 
+	cudaDeviceSynchronize();
+	
 	// Turned of to minimize printing
 	printArray("Add Result", addresultList, totalThreads);
 	printArray("Sub Result", subresultList, totalThreads);
