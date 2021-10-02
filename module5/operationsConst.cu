@@ -2,9 +2,8 @@
 #include <time.h>
 
 // Initialize constant variables
-__constant__ int* constThreadCountList;
-__constant__ int* constRandNumList;
-__constant__ int* constAddresultList;
+__constant__ int *constThreadCountList;
+__constant__ int *constRandNumList;
 
 /**
 * addConstCuda: A method that add two arrays and places the result in a third array using 
@@ -61,11 +60,14 @@ void runOperations(int numBlocks, int totalThreads, int *threadCountList, int *r
 	
 
 	// Set up input constant variables
-	cudaMalloc((void **)&constThreadCountList, totalThreads * sizeof(int));
-	cudaMalloc((void **)&constRandNumList, totalThreads * sizeof(int));
+	int *constThreadCountListPointer;
+	int *constRandNumListPointer;
 
-	cudaMemcpyToSymbol(constThreadCountList, &threadCountList, sizeof(int) * totalThreads);
-	cudaMemcpyToSymbol(constRandNumList, &randNumList, sizeof(int) * totalThreads);
+	cudaGetSymbolAddress((void **) &constThreadCountListPointer, constThreadCountList);
+	cudaGetSymbolAddress((void **) &constRandNumListPointer, constRandNumList);
+
+	cudaMemcpy(&constThreadCountListPointer, threadCountList, sizeof(int) * totalThreads, cudaMemcpyHostToDevice);
+	cudaMemcpy(&constRandNumListPointer, randNumList, sizeof(int) * totalThreads, cudaMemcpyHostToDevice);
 
 	// Prepare result array variables
 	int* addresultList = (int*) malloc(totalThreads * sizeof(int));
@@ -78,19 +80,15 @@ void runOperations(int numBlocks, int totalThreads, int *threadCountList, int *r
 
 	// Execute each operation and bring result from device to host
 	addConstCUDA<<<numBlocks,totalThreads>>> (dev_result);
-	cudaDeviceSynchronize();
 	cudaMemcpy(&addresultList, dev_result, sizeof(int) * totalThreads, cudaMemcpyDeviceToHost);
 
 	subConstCUDA<<<numBlocks,totalThreads>>> (dev_result);
-	cudaDeviceSynchronize();
 	cudaMemcpy(&subresultList, dev_result, sizeof(int) * totalThreads, cudaMemcpyDeviceToHost);
 
 	multConstCUDA<<<numBlocks,totalThreads>>> (dev_result);
-	cudaDeviceSynchronize();
 	cudaMemcpy(&multresultList, dev_result, sizeof(int) * totalThreads, cudaMemcpyDeviceToHost);
 
 	modConstCUDA<<<numBlocks,totalThreads>>> (dev_result);
-	cudaDeviceSynchronize();
 	cudaMemcpy(&modresultList, dev_result, sizeof(int) * totalThreads, cudaMemcpyDeviceToHost);
 
 	cudaDeviceSynchronize();
