@@ -12,6 +12,7 @@ __constant__ int *constRandNumList;
 __global__ void addConstCUDA(int* resultList) { 
 	const int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
 	resultList[idx] = constThreadCountList[idx] + constRandNumList[idx]; 
+	printf("+ %d", constThreadCountList[idx] + constRandNumList[idx]);
 }
 
 /**
