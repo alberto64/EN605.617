@@ -6,11 +6,21 @@ __shared__ int *sharedThreadCountList;
 __shared__ int *sharedRandNumList;
 
 /**
+* loadSharedInput: A method that loads into shared memory inputs used for operations.
+*/
+__global__ void loadSharedInput(int *threadCountList, int *randNumList) { 
+	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
+	sharedThreadCountList[idx] = threadCountList[idx];
+	sharedRandNumList[idx] = randNumList[idx]; 
+	__syncthreads();
+}
+
+/**
 * addSharedCuda: A method that add two arrays and places the result in a third array using 
 * multithreading for index calculation using shared memory.
 */
 __global__ void addSharedCUDA(int *resultList) { 
-	__shared__ unsigned int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
+	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
 	resultList[idx] = sharedThreadCountList[idx] + sharedRandNumList[idx]; 
 }
 
@@ -19,7 +29,7 @@ __global__ void addSharedCUDA(int *resultList) {
 * multithreading for index calculation using shared memory.
 */
 __global__ void subSharedCUDA(int *threadCountList, int *randNumList, int *resultList) { 
-	__shared__ int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
+	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
 	resultList[idx] = threadCountList[idx] - randNumList[idx]; 
 }
 
@@ -28,7 +38,7 @@ __global__ void subSharedCUDA(int *threadCountList, int *randNumList, int *resul
 * multithreading for index calculation using shared memory.
 */
 __global__ void multSharedCUDA(int *threadCountList, int *randNumList, int *resultList) { 
-	__shared__ int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
+	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
 	resultList[idx] = threadCountList[idx] * randNumList[idx]; 
 }
 
@@ -37,7 +47,7 @@ __global__ void multSharedCUDA(int *threadCountList, int *randNumList, int *resu
 * array using multithreading for index calculation using shared memory.
 */
 __global__ void modSharedCUDA(int *threadCountList, int *randNumList, int *resultList) { 
-	__shared__ int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
+	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
 	resultList[idx] = threadCountList[idx] % randNumList[idx]; 
 }
 
@@ -65,19 +75,19 @@ void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* r
 	// int* modresultList = (int*) malloc(totalThreads * sizeof(int));
 	
 	// Prepare cuda variables
-	//int *dev_threadCountList, *dev_randNumList;
+	// int *dev_threadCountList, *dev_randNumList;
 	int *dev_resultList;
-	cudaMalloc((void**)&sharedThreadCountList, totalThreads * sizeof(int));
-	cudaMalloc((void**)&sharedRandNumList, totalThreads * sizeof(int));
 
 	cudaMalloc((void**)&dev_resultList, totalThreads * sizeof(int));
 
+	loadSharedInput<<<numBlocks,totalThreads>>> (threadCountList, randNumList);
 	// Copy inputs into device memory 
-	cudaMemcpy(sharedThreadCountList, threadCountList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
-	cudaMemcpy(sharedRandNumList, randNumList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
-	
+	// cudaMemcpy(dev_threadCountList, threadCountList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
+	//cudaMemcpy(dev_randNumList, randNumList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
+
+
 	// Execute each operation and bring result from device to host
-	addCUDA<<<numBlocks,totalThreads>>> (dev_resultList);
+	addSharedCUDA<<<numBlocks,totalThreads>>> (dev_resultList);
 	cudaMemcpy(addresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
 	// subCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
