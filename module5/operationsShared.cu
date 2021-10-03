@@ -1,13 +1,17 @@
 #include <stdio.h>
 #include <time.h>
 
+// Initialize shared variables
+__shared__ int *sharedThreadCountList;
+__shared__ int *sharedRandNumList;
+
 /**
 * addSharedCuda: A method that add two arrays and places the result in a third array using 
 * multithreading for index calculation using shared memory.
 */
-__global__ void addSharedCUDA(int *threadCountList, int *randNumList, int *resultList) { 
+__global__ void addSharedCUDA(int *resultList) { 
 	__shared__ unsigned int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
-	resultList[idx] = threadCountList[idx] + randNumList[idx]; 
+	resultList[idx] = sharedThreadCountList[idx] + sharedRandNumList[idx]; 
 }
 
 /**
@@ -56,42 +60,44 @@ void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* r
 	
 	// Prepare result array variables
 	int* addresultList = (int*) malloc(totalThreads * sizeof(int));
-	int* subresultList = (int*) malloc(totalThreads * sizeof(int));
-	int* multresultList = (int*) malloc(totalThreads * sizeof(int));
-	int* modresultList = (int*) malloc(totalThreads * sizeof(int));
+	// int* subresultList = (int*) malloc(totalThreads * sizeof(int));
+	// int* multresultList = (int*) malloc(totalThreads * sizeof(int));
+	// int* modresultList = (int*) malloc(totalThreads * sizeof(int));
 	
 	// Prepare cuda variables
-	int* dev_threadCountList, *dev_randNumList, *dev_resultList;
-	cudaMalloc((void**)&dev_threadCountList, totalThreads * sizeof(int));
-	cudaMalloc((void**)&dev_randNumList, totalThreads * sizeof(int));
+	//int *dev_threadCountList, *dev_randNumList;
+	int *dev_resultList;
+	cudaMalloc((void**)&sharedThreadCountList, totalThreads * sizeof(int));
+	cudaMalloc((void**)&sharedRandNumList, totalThreads * sizeof(int));
+
 	cudaMalloc((void**)&dev_resultList, totalThreads * sizeof(int));
 
 	// Copy inputs into device memory 
-	cudaMemcpy(dev_threadCountList, threadCountList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
-	cudaMemcpy(dev_randNumList, randNumList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(sharedThreadCountList, threadCountList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(sharedRandNumList, randNumList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
 	
 	// Execute each operation and bring result from device to host
-	addCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
+	addCUDA<<<numBlocks,totalThreads>>> (dev_resultList);
 	cudaMemcpy(addresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
-	subCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
-	cudaMemcpy(subresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
+	// subCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
+	// cudaMemcpy(subresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
-	multCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
-	cudaMemcpy(multresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
+	// multCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
+	// cudaMemcpy(multresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
-	modCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
-	cudaMemcpy(modresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
+	// modCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
+	// cudaMemcpy(modresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
 	// Turned of to minimize printing
-	// printArray("Add Result", addresultList, totalThreads);
+	printArray("Add Result", addresultList, totalThreads);
 	// printArray("Sub Result", subresultList, totalThreads);
 	// printArray("Mult Result", multresultList, totalThreads);
 	// printArray("Mod Result", modresultList, totalThreads);
 	
 	// Free reserved memory
-	cudaFree(dev_threadCountList);
-	cudaFree(dev_randNumList);
+	// cudaFree(dev_threadCountList);
+	// cudaFree(dev_randNumList);
 	cudaFree(dev_resultList);
 }
 
