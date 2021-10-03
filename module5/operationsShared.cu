@@ -2,8 +2,8 @@
 #include <time.h>
 
 // Initialize shared variables
-__shared__ int *sharedThreadCountList;
-__shared__ int *sharedRandNumList;
+__shared__ int sharedThreadCountList[6000];
+__shared__ int sharedRandNumList[6000];
 
 /**
 * loadSharedInput: A method that loads into shared memory inputs used for operations.
