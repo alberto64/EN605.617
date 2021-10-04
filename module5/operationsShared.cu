@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <time.h>
 
-extern __shared__ int sharedThreadCountList[];
+__shared__ int sharedThreadCountList[100];
 extern __shared__ int sharedRandNumList[];
 
 /**
@@ -20,7 +20,7 @@ __global__ void loadSharedCUDA(int *threadCountList, int *randNumList) {
 */
 __global__ void addSharedCUDA(int *resultList) { 
 	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
-	resultList[idx] = sharedThreadCountList[idx] * sharedRandNumList[idx]; 
+	resultList[idx] = sharedThreadCountList[idx] + sharedRandNumList[idx]; 
 }
 
 /**
