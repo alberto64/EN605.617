@@ -12,8 +12,6 @@ __global__ void loadSharedCUDA(int *threadCountList, int *randNumList) {
 	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
 	sharedThreadCountList[idx] = threadCountList[idx];
 	sharedRandNumList[idx] = randNumList[idx]; 
-	__syncthreads();
-	printf("+ %i ", sharedThreadCountList[idx]);
 }
 
 /**
@@ -106,8 +104,8 @@ void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* r
 	// printArray("Mod Result", modresultList, totalThreads);
 	
 	// Free reserved memory
-	// cudaFree(dev_threadCountList);
-	// cudaFree(dev_randNumList);
+	cudaFree(dev_threadCountList);
+	cudaFree(dev_randNumList);
 	cudaFree(dev_resultList);
 }
 
