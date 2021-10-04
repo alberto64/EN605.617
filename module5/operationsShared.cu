@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <time.h>
 
-__shared__ int sharedThreadCountList[100];
+extern __shared__ int sharedThreadCountList[];
 extern __shared__ int sharedRandNumList[];
 
 /**
@@ -27,27 +27,27 @@ __global__ void addSharedCUDA(int *resultList) {
 * subSharedCuda: A method that substract two arrays and places the result in a third array using 
 * multithreading for index calculation using shared memory.
 */
-__global__ void subSharedCUDA(int *threadCountList, int *randNumList, int *resultList) { 
+__global__ void subSharedCUDA(int *resultList) { 
 	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
-	resultList[idx] = threadCountList[idx] - randNumList[idx]; 
+	resultList[idx] = sharedThreadCountList[idx] + sharedRandNumList[idx]; 
 }
 
 /**
 * multSharedCuda: A method that multiplies two arrays and places the result in a third array using 
 * multithreading for index calculation using shared memory.
 */
-__global__ void multSharedCUDA(int *threadCountList, int *randNumList, int *resultList) { 
+__global__ void multSharedCUDA(int *resultList) { 
 	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
-	resultList[idx] = threadCountList[idx] * randNumList[idx]; 
+	resultList[idx] = sharedThreadCountList[idx] + sharedRandNumList[idx]; 
 }
 
 /**
 * modSharedCuda: A method that does the modulus between two arrays and places the result in a third 
 * array using multithreading for index calculation using shared memory.
 */
-__global__ void modSharedCUDA(int *threadCountList, int *randNumList, int *resultList) { 
+__global__ void modSharedCUDA(int *resultList) { 
 	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
-	resultList[idx] = threadCountList[idx] % randNumList[idx]; 
+	resultList[idx] = sharedThreadCountList[idx] + sharedRandNumList[idx]; 
 }
 
 /**
@@ -69,9 +69,9 @@ void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* r
 
 	// Prepare result array variables
 	int* addresultList = (int*) malloc(totalThreads * sizeof(int));
-	// int* subresultList = (int*) malloc(totalThreads * sizeof(int));
-	// int* multresultList = (int*) malloc(totalThreads * sizeof(int));
-	// int* modresultList = (int*) malloc(totalThreads * sizeof(int));
+	int* subresultList = (int*) malloc(totalThreads * sizeof(int));
+	int* multresultList = (int*) malloc(totalThreads * sizeof(int));
+	int* modresultList = (int*) malloc(totalThreads * sizeof(int));
 	
 	// Prepare cuda variables
 	int *dev_threadCountList, *dev_randNumList, *dev_resultList;
@@ -88,17 +88,17 @@ void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* r
 	addSharedCUDA<<<numBlocks,totalThreads>>> (dev_resultList);
 	cudaMemcpy(addresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
-	// subSharedCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
-	// cudaMemcpy(subresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
+	subSharedCUDA<<<numBlocks,totalThreads>>> (dev_resultList);
+	cudaMemcpy(subresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
-	// multSharedCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
-	// cudaMemcpy(multresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
+	multSharedCUDA<<<numBlocks,totalThreads>>> (dev_resultList);
+	cudaMemcpy(multresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
-	// modSharedCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
-	// cudaMemcpy(modresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
+	modSharedCUDA<<<numBlocks,totalThreads>>> (dev_resultList);
+	cudaMemcpy(modresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
 	// Turned of to minimize printing
-	printArray("Add Result", addresultList, totalThreads);
+	// printArray("Add Result", addresultList, totalThreads);
 	// printArray("Sub Result", subresultList, totalThreads);
 	// printArray("Mult Result", multresultList, totalThreads);
 	// printArray("Mod Result", modresultList, totalThreads);
@@ -129,9 +129,9 @@ void timeTest(const int numBlocks, const int totalThreads) {
    	}
 	
 	// Show generated values
-	// Turned of to minimize printing
-	printArray("Thread Count List", threadCountList, totalThreads);
-	printArray("Random Number List", randNumList, totalThreads);
+	// Turned oof to minimize printing
+	// printArray("Thread Count List", threadCountList, totalThreads);
+	// printArray("Random Number List", randNumList, totalThreads);
 	
 	// Run and time operations using const memory
 	start = clock();
