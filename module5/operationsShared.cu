@@ -5,8 +5,7 @@
 * addSharedCuda: A method that add two arrays and places the result in a third array using 
 * multithreading for index calculation using shared memory.
 */
-__device__ void addSharedCUDA(int *threadCountList, int *randNumList, int *resultList) { 
-	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
+__device__ void addSharedCUDA(int idx, int *threadCountList, int *randNumList, int *resultList) { 
 	resultList[idx] = threadCountList[idx] + randNumList[idx]; 
 }
 
@@ -14,8 +13,7 @@ __device__ void addSharedCUDA(int *threadCountList, int *randNumList, int *resul
 * subSharedCuda: A method that substract two arrays and places the result in a third array using 
 * multithreading for index calculation using shared memory.
 */
-__device__ void subSharedCUDA(int *threadCountList, int *randNumList, int *resultList) { 
-	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
+__device__ void subSharedCUDA(int idx, int *threadCountList, int *randNumList, int *resultList) { 
 	resultList[idx] = threadCountList[idx] - randNumList[idx]; 
 }
 
@@ -23,8 +21,7 @@ __device__ void subSharedCUDA(int *threadCountList, int *randNumList, int *resul
 * multSharedCuda: A method that multiplies two arrays and places the result in a third array using 
 * multithreading for index calculation using shared memory.
 */
-__device__ void multSharedCUDA(int *threadCountList, int *randNumList, int *resultList) { 
-	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
+__device__ void multSharedCUDA(int idx, int *threadCountList, int *randNumList, int *resultList) { 
 	resultList[idx] = threadCountList[idx] * randNumList[idx]; 
 }
 
@@ -32,8 +29,7 @@ __device__ void multSharedCUDA(int *threadCountList, int *randNumList, int *resu
 * modSharedCuda: A method that does the modulus between two arrays and places the result in a third 
 * array using multithreading for index calculation using shared memory.
 */
-__device__ void modSharedCUDA(int *threadCountList, int *randNumList, int *resultList) { 
-	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
+__device__ void modSharedCUDA(int idx, int *threadCountList, int *randNumList, int *resultList) { 
 	resultList[idx] = threadCountList[idx] % randNumList[idx]; 
 }
 
@@ -53,18 +49,20 @@ void printArray(const char* name, int *array, int size) {
 */
 __global__ void runOperations(int *dev_threadCountList, int *dev_randNumList, int *dev_addResultList, int *dev_subResultList, int *dev_multResultList, int *dev_modResultList) {
 	
-	extern __shared__ int sharedThreadCountList[];
-	extern __shared__ int sharedRandNumList[];
+	__shared__ int sharedThreadCountList[1000];
+	__shared__ int sharedRandNumList[1000];
 
 	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
 
 	sharedThreadCountList[idx] = dev_threadCountList[idx];
 	sharedRandNumList[idx] = dev_randNumList[idx];
 
-	addSharedCUDA(dev_threadCountList, dev_randNumList, dev_addResultList);
-	subSharedCUDA(dev_threadCountList, dev_randNumList, dev_subResultList);
-	multSharedCUDA(dev_threadCountList, dev_randNumList, dev_multResultList);
-	modSharedCUDA(dev_threadCountList, dev_randNumList, dev_modResultList);
+	__syncthreads();
+
+	addSharedCUDA(idx, sharedThreadCountList, sharedRandNumList, dev_addResultList);
+	subSharedCUDA(idx, sharedThreadCountList, sharedRandNumList, dev_subResultList);
+	multSharedCUDA(idx, sharedThreadCountList, sharedRandNumList, dev_multResultList);
+	modSharedCUDA(idx, sharedThreadCountList, sharedRandNumList, dev_modResultList);
 }
 
 /**
