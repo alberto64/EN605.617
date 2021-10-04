@@ -138,7 +138,7 @@ void timeTest(const int numBlocks, const int totalThreads) {
 	runOperations(numBlocks, totalThreads, threadCountList, randNumList);
 	end = clock();
 	timePassedMiliSeconds = (double) (end - start) * 1000 / CLOCKS_PER_SEC;
-	printf("\nShared Memory Time: %f Miliseconds\n", timePassedMiliSeconds);
+	printf("Shared Memory Time: %f Miliseconds\n", timePassedMiliSeconds);
 }
 
 /**
@@ -170,7 +170,7 @@ int main(int argc, char** argv) {
 		printf("The total number of threads will be rounded up to %d\n", totalThreads);
 	}
 
-	printf("Total Threads: %d\nBlock Size: %d\n", totalThreads, blockSize);
+	printf("\nTotal Threads: %d\nBlock Size: %d\n", totalThreads, blockSize);
 
 	timeTest(numBlocks, totalThreads);
 
