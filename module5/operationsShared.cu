@@ -1,18 +1,17 @@
 #include <stdio.h>
 #include <time.h>
 
-// Initialize shared variables
-__shared__ int sharedThreadCountList[6000];
-__shared__ int sharedRandNumList[6000];
+extern __shared__ int sharedThreadCountList[];
+extern __shared__ int sharedRandNumList[];
 
 /**
-* loadSharedInput: A method that loads into shared memory inputs used for operations.
+* addSharedCuda: A method that add two arrays and places the result in a third array using 
+* multithreading for index calculation using shared memory.
 */
-__global__ void loadSharedInput(int *threadCountList, int *randNumList) { 
+__global__ void loadSharedCUDA(int *threadCountList, int *randNumList) { 
 	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
 	sharedThreadCountList[idx] = threadCountList[idx];
 	sharedRandNumList[idx] = randNumList[idx]; 
-	__syncthreads();
 }
 
 /**
@@ -21,7 +20,7 @@ __global__ void loadSharedInput(int *threadCountList, int *randNumList) {
 */
 __global__ void addSharedCUDA(int *resultList) { 
 	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
-	resultList[idx] = sharedThreadCountList[idx] + sharedRandNumList[idx]; 
+	resultList[idx] = sharedThreadCountList[idx] * sharedRandNumList[idx]; 
 }
 
 /**
@@ -75,28 +74,27 @@ void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* r
 	// int* modresultList = (int*) malloc(totalThreads * sizeof(int));
 	
 	// Prepare cuda variables
-	// int *dev_threadCountList, *dev_randNumList;
+	// int *dev_threadCountList, *dev_randNumList, 
 	int *dev_resultList;
-
+	// cudaMalloc((void**)&dev_threadCountList, totalThreads * sizeof(int));
+	// cudaMalloc((void**)&dev_randNumList, totalThreads * sizeof(int));
 	cudaMalloc((void**)&dev_resultList, totalThreads * sizeof(int));
 
-	loadSharedInput<<<numBlocks,totalThreads>>> (threadCountList, randNumList);
 	// Copy inputs into device memory 
 	// cudaMemcpy(dev_threadCountList, threadCountList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
-	//cudaMemcpy(dev_randNumList, randNumList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
-
-
+	// cudaMemcpy(dev_randNumList, randNumList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
+	
 	// Execute each operation and bring result from device to host
 	addSharedCUDA<<<numBlocks,totalThreads>>> (dev_resultList);
 	cudaMemcpy(addresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
-	// subCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
+	// subSharedCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
 	// cudaMemcpy(subresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
-	// multCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
+	// multSharedCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
 	// cudaMemcpy(multresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
-	// modCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
+	// modSharedCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
 	// cudaMemcpy(modresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
 	// Turned of to minimize printing
@@ -114,21 +112,31 @@ void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* r
 /**
 * runTest: Used to set up variables needed to run a timing test.
 */ 
-void runTest(const int numBlocks, const int totalThreads) {
+void timeTest(const int numBlocks, const int totalThreads) {
 
 	// Set up variables for timing
 	clock_t start, end;
 	double timePassedMiliSeconds;
 
-	// Set up global memory space 
+	// Set up paged memory space 
 	int* threadCountList = (int*) malloc(totalThreads * sizeof(int));
 	int* randNumList = (int*) malloc(totalThreads * sizeof(int));
 	
+	// Set up pinned memory space
+	int* pinned_threadCountList;
+	int* pinned_randNumList;
+	cudaMallocHost((void**)&pinned_threadCountList, totalThreads * sizeof(int));
+	cudaMallocHost((void**)&pinned_randNumList, totalThreads * sizeof(int));
+
 	// Populate paged memory arrays
 	for ( int idx = 0; idx < totalThreads; idx++ ) {
     	threadCountList[idx] = idx; 
 		randNumList[idx] = rand() % 4;
    	}
+
+  	// Populate pinned memory arrays
+	memcpy(pinned_threadCountList, threadCountList, totalThreads * sizeof(int));  
+	memcpy(pinned_randNumList, randNumList, totalThreads * sizeof(int));
 	
 	// Show generated values
 	// Turned of to minimize printing
@@ -140,10 +148,7 @@ void runTest(const int numBlocks, const int totalThreads) {
 	runOperations(numBlocks, totalThreads, threadCountList, randNumList);
 	end = clock();
 	timePassedMiliSeconds = (double) (end - start) * 1000 / CLOCKS_PER_SEC;
-	printf("\nConstant Memory Time: %f Miliseconds\n", timePassedMiliSeconds);
-
-	// Free device memory
-	cudaDeviceReset();
+	printf("\nShared Memory Time: %f Miliseconds\n", timePassedMiliSeconds);
 }
 
 /**
@@ -177,7 +182,7 @@ int main(int argc, char** argv) {
 
 	printf("Total Threads: %d\nBlock Size: %d\n", totalThreads, blockSize);
 
-	runTest(numBlocks, totalThreads);
+	timeTest(numBlocks, totalThreads);
 
 	return 0;
 }
