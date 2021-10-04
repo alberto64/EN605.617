@@ -76,16 +76,15 @@ void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* r
 	// int* modresultList = (int*) malloc(totalThreads * sizeof(int));
 	
 	// Prepare cuda variables
-	// int *dev_threadCountList, *dev_randNumList, 
-	int *dev_resultList;
-	// cudaMalloc((void**)&dev_threadCountList, totalThreads * sizeof(int));
-	// cudaMalloc((void**)&dev_randNumList, totalThreads * sizeof(int));
+	int *dev_threadCountList, *dev_randNumList, *dev_resultList;
+	cudaMalloc((void**)&dev_threadCountList, totalThreads * sizeof(int));
+	cudaMalloc((void**)&dev_randNumList, totalThreads * sizeof(int));
 	cudaMalloc((void**)&dev_resultList, totalThreads * sizeof(int));
 
 	// Copy inputs into device memory 
-	// cudaMemcpy(dev_threadCountList, threadCountList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
-	// cudaMemcpy(dev_randNumList, randNumList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
-	loadSharedCUDA<<<numBlocks,totalThreads>>> (threadCountList, randNumList);
+	cudaMemcpy(dev_threadCountList, threadCountList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(dev_randNumList, randNumList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
+	loadSharedCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList);
 
 	// Execute each operation and bring result from device to host
 	addSharedCUDA<<<numBlocks,totalThreads>>> (dev_resultList);
