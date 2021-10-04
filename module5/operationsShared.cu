@@ -68,7 +68,7 @@ void printArray(const char* name, int *array, int size) {
 * given arrays and prints their results. Uses shared memory.
 */
 void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* randNumList) { 
-	
+
 	// Prepare result array variables
 	int* addresultList = (int*) malloc(totalThreads * sizeof(int));
 	// int* subresultList = (int*) malloc(totalThreads * sizeof(int));
@@ -85,7 +85,8 @@ void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* r
 	// Copy inputs into device memory 
 	// cudaMemcpy(dev_threadCountList, threadCountList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
 	// cudaMemcpy(dev_randNumList, randNumList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
-	
+	loadSharedCUDA<<<numBlocks,totalThreads>>> (threadCountList, randNumList);
+
 	// Execute each operation and bring result from device to host
 	addSharedCUDA<<<numBlocks,totalThreads>>> (dev_resultList);
 	cudaMemcpy(addresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
@@ -123,27 +124,17 @@ void timeTest(const int numBlocks, const int totalThreads) {
 	// Set up paged memory space 
 	int* threadCountList = (int*) malloc(totalThreads * sizeof(int));
 	int* randNumList = (int*) malloc(totalThreads * sizeof(int));
-	
-	// Set up pinned memory space
-	int* pinned_threadCountList;
-	int* pinned_randNumList;
-	cudaMallocHost((void**)&pinned_threadCountList, totalThreads * sizeof(int));
-	cudaMallocHost((void**)&pinned_randNumList, totalThreads * sizeof(int));
 
 	// Populate paged memory arrays
 	for ( int idx = 0; idx < totalThreads; idx++ ) {
     	threadCountList[idx] = idx; 
 		randNumList[idx] = rand() % 4;
    	}
-
-  	// Populate pinned memory arrays
-	memcpy(pinned_threadCountList, threadCountList, totalThreads * sizeof(int));  
-	memcpy(pinned_randNumList, randNumList, totalThreads * sizeof(int));
 	
 	// Show generated values
 	// Turned of to minimize printing
-	// printArray("Thread Count List", threadCountList, totalThreads);
-	// printArray("Random Number List", randNumList, totalThreads);
+	printArray("Thread Count List", threadCountList, totalThreads);
+	printArray("Random Number List", randNumList, totalThreads);
 	
 	// Run and time operations using const memory
 	start = clock();
