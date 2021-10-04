@@ -1,7 +1,7 @@
 nvcc operationsConst.cu -o constant.sh
 nvcc operationsShared.cu -o shared.sh
 ./constant.sh 64 1
-./operations.sh 64 1
+./shared.sh 64 1
 
 ./constant.sh 256 4
 ./shared.sh 256 4
