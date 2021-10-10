@@ -95,7 +95,7 @@ void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* r
 	cudaFree(dev_resultList);
 }
 
-void timeTest(int totalThreads, int blockSize) {
+void timeTest(int numBlocks, int totalThreads) {
 	// Set up variables for timing
 	clock_t start, end;
 	double timePassedMiliSeconds;
@@ -150,7 +150,7 @@ int main(int argc, char** argv) {
 
 	printf("Total Threads: %d\nBlock Size: %d\n", totalThreads, blockSize);
 	
-	timeTest(totalThreads, blockSize);
+	timeTest(numBlocks, totalThreads);
 
 	return 0;
 }
