@@ -2,47 +2,39 @@
 #include <time.h>
 
 /**
-* addCuda: A method that add two arrays and places the result in a first array using 
+* addCuda: A method that add two arrays and places the result in a third array using 
 * multithreading for index calculation.
 */
-__global__ void addCUDA(int *threadCountList, const int *randNumList) { 
-	const int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
-	int operation = threadCountList[idx];
-	operation = operation + randNumList[idx]; 
-	threadCountList[idx] = operation; 
+__global__ void addCUDA(const int *threadCountList, const int *randNumList, int *resultList) { 
+	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
+	resultList[idx] = threadCountList[idx] + randNumList[idx]; 
 }
 
 /**
-* subCuda: A method that substract two arrays and places the result in a first array using 
+* subCuda: A method that substract two arrays and places the result in a third array using 
 * multithreading for index calculation.
 */
-__global__ void subCUDA(int *threadCountList, const int *randNumList) { 
-	const int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
-	int operation = threadCountList[idx];
-	operation = operation + randNumList[idx]; 
-	threadCountList[idx] = operation; 
+__global__ void subCUDA(const int *threadCountList, const int *randNumList, int *resultList) { 
+	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
+	resultList[idx] = threadCountList[idx] - randNumList[idx]; 
 }
 
 /**
-* multCuda: A method that multiplies two arrays and places the result in a first array using 
+* multCuda: A method that multiplies two arrays and places the result in a third array using 
 * multithreading for index calculation.
 */
-__global__ void multCUDA(int *threadCountList, const int *randNumList) { 
-	const int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
-	int operation = threadCountList[idx];
-	operation = operation + randNumList[idx]; 
-	threadCountList[idx] = operation; 
+__global__ void multCUDA(const int *threadCountList, const int *randNumList, int *resultList) { 
+	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
+	resultList[idx] = threadCountList[idx] * randNumList[idx]; 
 }
 
 /**
-* modCuda: A method that does the modulus between two arrays and places the result in a first 
+* modCuda: A method that does the modulus between two arrays and places the result in a third 
 * array using multithreading for index calculation.
 */
-__global__ void modCUDA(int *threadCountList, const int *randNumList) { 
-	const int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
-	int operation = threadCountList[idx];
-	operation = operation + randNumList[idx]; 
-	threadCountList[idx] = operation;  
+__global__ void modCUDA(const int *threadCountList, const int *randNumList, int *resultList) { 
+	int idx = threadIdx.x + (blockIdx.x * blockDim.x); 
+	resultList[idx] = threadCountList[idx] % randNumList[idx]; 
 }
 
 /**
@@ -69,31 +61,27 @@ void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* r
 	int* modresultList = (int*) malloc(totalThreads * sizeof(int));
 	
 	// Prepare cuda variables
-	int *dev_addresultList, *dev_subresultList, *dev_multresultList, *dev_modresultList, *dev_randNumList;
-	cudaMalloc((void**)&dev_addresultList, totalThreads * sizeof(int));
-	cudaMalloc((void**)&dev_subresultList, totalThreads * sizeof(int));
-	cudaMalloc((void**)&dev_multresultList, totalThreads * sizeof(int));
-	cudaMalloc((void**)&dev_modresultList, totalThreads * sizeof(int));
+	int* dev_threadCountList, *dev_randNumList, *dev_resultList;
+	cudaMalloc((void**)&dev_threadCountList, totalThreads * sizeof(int));
 	cudaMalloc((void**)&dev_randNumList, totalThreads * sizeof(int));
+	cudaMalloc((void**)&dev_resultList, totalThreads * sizeof(int));
 
 	// Copy inputs into device memory 
-	cudaMemcpy(dev_addresultList, threadCountList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
-	cudaMemcpy(dev_subresultList, threadCountList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
-	cudaMemcpy(dev_multresultList, threadCountList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
-	cudaMemcpy(dev_modresultList, threadCountList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(dev_threadCountList, threadCountList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
 	cudaMemcpy(dev_randNumList, randNumList, totalThreads * sizeof(int), cudaMemcpyHostToDevice);
 	
-	// Execute each operation  
-	addCUDA<<<numBlocks,totalThreads>>> (dev_addresultList, dev_randNumList);
-	subCUDA<<<numBlocks,totalThreads>>> (dev_subresultList, dev_randNumList);
-	multCUDA<<<numBlocks,totalThreads>>> (dev_multresultList, dev_randNumList);
-	modCUDA<<<numBlocks,totalThreads>>> (dev_modresultList, dev_randNumList);
+	// Execute each operation and bring result from device to host
+	addCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
+	cudaMemcpy(addresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
-	// Bring result from device to host
-	cudaMemcpy(addresultList, dev_addresultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
-	cudaMemcpy(subresultList, dev_subresultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
-	cudaMemcpy(multresultList, dev_multresultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
-	cudaMemcpy(modresultList, dev_modresultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
+	subCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
+	cudaMemcpy(subresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
+
+	multCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
+	cudaMemcpy(multresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
+
+	modCUDA<<<numBlocks,totalThreads>>> (dev_threadCountList, dev_randNumList, dev_resultList);
+	cudaMemcpy(modresultList, dev_resultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
 	// Turned of to minimize printing
 	printArray("Add Result", addresultList, totalThreads);
@@ -102,11 +90,9 @@ void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* r
 	printArray("Mod Result", modresultList, totalThreads);
 	
 	// Free reserved memory
-	cudaFree(dev_addresultList);
-	cudaFree(dev_subresultList);
-	cudaFree(dev_multresultList);
-	cudaFree(dev_modresultList);
+	cudaFree(dev_threadCountList);
 	cudaFree(dev_randNumList);
+	cudaFree(dev_resultList);
 }
 
 void timeTest(int totalThreads, int blockSize) {
@@ -129,12 +115,12 @@ void timeTest(int totalThreads, int blockSize) {
 	printArray("Thread Count List", threadCountList, totalThreads);
 	printArray("Random Number List", randNumList, totalThreads);
 	
-	// Run and time operations using register memory
+	// Run and time operations using paged memory
 	start = clock();
 	runOperations(numBlocks, totalThreads, threadCountList, randNumList);
 	end = clock();
 	timePassedMiliSeconds = (double) (end - start) * 1000 / CLOCKS_PER_SEC;
-	printf("\nRegister Memory Time: %f Miliseconds\n", timePassedMiliSeconds);
+	printf("\nPaged Memory Time: %f Miliseconds\n", timePassedMiliSeconds);
 }
 int main(int argc, char** argv) {
 	// Based on the work of Andrew Krepps
