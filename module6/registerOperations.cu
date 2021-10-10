@@ -96,10 +96,10 @@ void runOperations(int numBlocks, int totalThreads, int* threadCountList, int* r
 	cudaMemcpy(modresultList, dev_modresultList, totalThreads * sizeof(int), cudaMemcpyDeviceToHost); 
 
 	// Turned of to minimize printing
-	printArray("Add Result", addresultList, totalThreads);
-	printArray("Sub Result", subresultList, totalThreads);
-	printArray("Mult Result", multresultList, totalThreads);
-	printArray("Mod Result", modresultList, totalThreads);
+	// printArray("Add Result", addresultList, totalThreads);
+	// printArray("Sub Result", subresultList, totalThreads);
+	// printArray("Mult Result", multresultList, totalThreads);
+	// printArray("Mod Result", modresultList, totalThreads);
 	
 	// Free reserved memory
 	cudaFree(dev_addresultList);
@@ -126,8 +126,8 @@ void timeTest(int numBlocks, int totalThreads) {
 	
 	// Show generated values
 	// Turned of to minimize printing
-	printArray("Thread Count List", threadCountList, totalThreads);
-	printArray("Random Number List", randNumList, totalThreads);
+	// printArray("Thread Count List", threadCountList, totalThreads);
+	// printArray("Random Number List", randNumList, totalThreads);
 	
 	// Run and time operations using register memory
 	start = clock();
