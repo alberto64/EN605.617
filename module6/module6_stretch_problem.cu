@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <time.h>
+
 // constant values that do not change at runtime
 const unsigned int NUM_ROWS = 640*32;
 const unsigned int NUM_COLS = 16;
