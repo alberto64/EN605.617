@@ -42,7 +42,7 @@ __global__ void modCUDA(int *threadCountList, int *randNumList, int *resultList)
 */
 void printArray(const char* name, int *array, int size) {
 	printf("\n%s: [ ", name);
-	for(int idx = 0; idx < size; idx++) {
+	for (int idx = 0; idx < size; idx++) {
 		printf("%i ", array[idx]);
 	}
 	printf("]\n");
@@ -66,14 +66,10 @@ void runOperations(int numBlocks, int totalThreads) {
   
 	// Setup host and device memory variables
 	int *host_threadCountList, *host_randNumberList, *host_addresult, *host_subresult, *host_multresult, *host_modresult; 
-	int *device_threadCountList, *device_randNumberList, *device_result;//, *device_subresult, *device_multresult, *device_modresult; 
+	int *device_threadCountList, *device_randNumberList, *device_result; 
 	cudaMalloc((void**) &device_threadCountList, totalThreads * sizeof(*device_threadCountList)); 
 	cudaMalloc((void**) &device_randNumberList, totalThreads * sizeof(*device_randNumberList)); 
 	cudaMalloc((void**) &device_result, totalThreads * sizeof(*device_result)); 
-	//cudaMalloc((void**) &device_subresult, totalThreads * sizeof(*device_subresult)); 
-	//cudaMalloc((void**) &device_multresult, totalThreads * sizeof(*device_multresult)); 
-	//cudaMalloc((void**) &device_modresult, totalThreads * sizeof(*device_modresult)); 
-  
 	cudaHostAlloc((void**) &host_threadCountList, totalThreads * sizeof(int), cudaHostAllocDefault);
 	cudaHostAlloc((void**) &host_randNumberList, totalThreads * sizeof(int), cudaHostAllocDefault);
 	cudaHostAlloc((void**) &host_addresult, totalThreads * sizeof(int), cudaHostAllocDefault);
@@ -111,6 +107,7 @@ void runOperations(int numBlocks, int totalThreads) {
 	modCUDA<<<totalThreads, numBlocks, 1, operationStream>>>(device_threadCountList, device_randNumberList, device_result);
 	cudaMemcpyAsync(host_modresult, device_result, totalThreads * sizeof(int), cudaMemcpyDeviceToHost, operationStream);
 
+	// Synchronizing Stream and stopping recording.
 	cudaStreamSynchronize(operationStream);
   	cudaEventRecord(stop, 0);
   	cudaEventSynchronize(stop); 
@@ -118,10 +115,10 @@ void runOperations(int numBlocks, int totalThreads) {
 	printf("Stream and Event Time: %f Miliseconds\n", elapsedTimeInMiliseconds) * 100;
 
 	// Turned of to minimize printing
-	printArray("Add Result", host_addresult, totalThreads);
-	printArray("Sub Result", host_subresult, totalThreads);
-	printArray("Mult Result", host_multresult, totalThreads);
-	printArray("Mod Result", host_modresult, totalThreads);
+	// printArray("Add Result", host_addresult, totalThreads);
+	// printArray("Sub Result", host_subresult, totalThreads);
+	// printArray("Mult Result", host_multresult, totalThreads);
+	// printArray("Mod Result", host_modresult, totalThreads);
 
 	// Free reserved memory
 	cudaFreeHost(host_threadCountList);
@@ -137,7 +134,6 @@ void runOperations(int numBlocks, int totalThreads) {
 
 int main(int argc, char** argv) {
 	// Based on the work of Andrew Krepps
-	
 	// Set default values in case arguments don't come in command line.
 	int totalThreads = 1024;
 	int blockSize = 256;
@@ -160,7 +156,6 @@ int main(int argc, char** argv) {
 		printf("Warning: Total thread count is not evenly divisible by the block size\n");
 		printf("The total number of threads will be rounded up to %d\n", totalThreads);
 	}
-
 	printf("\nTotal Threads: %d\nBlock Size: %d\n", totalThreads, blockSize);
 	
 	runOperations(numBlocks, totalThreads);
