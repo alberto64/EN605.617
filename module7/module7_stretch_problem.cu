@@ -218,7 +218,7 @@ __host__ float execute_shared_memory_operations()
   	//PLACE YOUR CODE HERE
   	cudaStream_t stream; 
   	cudaStreamCreate(&stream); 
-	  
+
 	//start timing metric
 	cudaEventRecord(kernel_start, 0);
 
@@ -270,8 +270,8 @@ int main(void) {
   print_all_CUDA_devices_and_properties();
 
   //test harness for timing some kernels using streams and events
-	float delta_shared = //PLACE YOUR CODE HERE TO USE SHARED MEMORY FOR OPERATIONS
-	float delta_register = //PLACE YOUR CODE HERE TO USE REGISTER MEMORY FOR OPERATIONS
+	float delta_shared = execute_shared_memory_operations(); //PLACE YOUR CODE HERE TO USE SHARED MEMORY FOR OPERATIONS
+	float delta_register = execute_register_memory_operations(); //PLACE YOUR CODE HERE TO USE REGISTER MEMORY FOR OPERATIONS
 
 	//print out the results of the time executions returned by the prev methods
 	printf("========================\n");
