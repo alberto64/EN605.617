@@ -66,7 +66,7 @@ void runOperations(int numBlocks, int totalThreads) {
   
 	// Setup host and device memory variables
 	int *host_threadCountList, *host_randNumberList, *host_addresult, *host_subresult, *host_multresult, *host_modresult; 
-	int *device_threadCountList, *device_randNumberList, *device_result//, *device_subresult, *device_multresult, *device_modresult; 
+	int *device_threadCountList, *device_randNumberList, *device_result;//, *device_subresult, *device_multresult, *device_modresult; 
 	cudaMalloc((void**) &device_threadCountList, totalThreads * sizeof(*device_threadCountList)); 
 	cudaMalloc((void**) &device_randNumberList, totalThreads * sizeof(*device_randNumberList)); 
 	cudaMalloc((void**) &device_result, totalThreads * sizeof(*device_result)); 
@@ -82,7 +82,7 @@ void runOperations(int numBlocks, int totalThreads) {
 	cudaHostAlloc((void**) &host_modresult, totalThreads * sizeof(int), cudaHostAllocDefault);
   
 	// Populate host inputs
-	for(int idx = 0; index < totalThreads; index++) { 
+	for(int idx = 0; idx < totalThreads; idx++) { 
 		host_threadCountList[idx] = idx; 
 		host_randNumberList[idx] = rand() % 4; 
 	} 
@@ -100,18 +100,18 @@ void runOperations(int numBlocks, int totalThreads) {
   
 	// Execute each operation and bring result from device to host
 	addCUDA<<<totalThreads, numBlocks, 1, operationStream>>>(device_threadCountList, device_randNumberList, device_result);
-	cudaMemcpyAsync(host_addresult, device_result, sizeOfArray * sizeof(int), cudaMemcpyDeviceToHost, operationStream);
+	cudaMemcpyAsync(host_addresult, device_result, totalThreads * sizeof(int), cudaMemcpyDeviceToHost, operationStream);
 	
 	subCUDA<<<totalThreads, numBlocks, 1, operationStream>>>(device_threadCountList, device_randNumberList, device_result);
-	cudaMemcpyAsync(host_subresult, device_result, sizeOfArray * sizeof(int), cudaMemcpyDeviceToHost, operationStream);
+	cudaMemcpyAsync(host_subresult, device_result, totalThreads * sizeof(int), cudaMemcpyDeviceToHost, operationStream);
 
 	multCUDA<<<totalThreads, numBlocks, 1, operationStream>>>(device_threadCountList, device_randNumberList, device_result);
-	cudaMemcpyAsync(host_multresult, device_result, sizeOfArray * sizeof(int), cudaMemcpyDeviceToHost, operationStream);
+	cudaMemcpyAsync(host_multresult, device_result, totalThreads * sizeof(int), cudaMemcpyDeviceToHost, operationStream);
 
 	modCUDA<<<totalThreads, numBlocks, 1, operationStream>>>(device_threadCountList, device_randNumberList, device_result);
-	cudaMemcpyAsync(host_modresult, device_result, sizeOfArray * sizeof(int), cudaMemcpyDeviceToHost, operationStream);
+	cudaMemcpyAsync(host_modresult, device_result, totalThreads * sizeof(int), cudaMemcpyDeviceToHost, operationStream);
 
-	cudaStreamSynchronize(stream);
+	cudaStreamSynchronize(operationStream);
   	cudaEventRecord(stop, 0);
   	cudaEventSynchronize(stop); 
   	cudaEventElapsedTime(&elapsedTimeInMiliseconds, start, stop); 
