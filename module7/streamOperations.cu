@@ -84,8 +84,8 @@ void runOperations(int numBlocks, int totalThreads) {
 	} 
 
 	// Turned of to minimize printing
-	printArray("Thread Count", host_threadCountList, totalThreads);
-	printArray("Random Numbers", host_randNumberList, totalThreads);
+	// printArray("Thread Count", host_threadCountList, totalThreads);
+	// printArray("Random Numbers", host_randNumberList, totalThreads);
 
 	// Start event
 	cudaEventRecord(start);
