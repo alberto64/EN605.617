@@ -2,7 +2,6 @@
 #include <time.h>
 #include <cublas.h>
 #include <cublas_v2.h>
-
 #define indexCalculation(i,j,ld) (((j)*(ld))+(i))
 
 /**
@@ -13,10 +12,10 @@ void printMatrix(const char* name, float *matrix, int matrixWidth, int matrixHei
 	for(int i = 0 ; i < matrixHeight ; i++) {
 		printf("\n");
 		for(int j = 0 ; j < matrixWidth ; j++) {
-			printf("%f ,", matrix[indexCalculation(i, j, matrixHeight)]);
+			printf("%f, ", matrix[indexCalculation(i, j, matrixHeight)]);
 		}
 	}
-	printf(" ]", name);
+	printf("]");
 }
 
 /**
@@ -30,15 +29,16 @@ void runOperation(int matrixHeight, int matrixWidth) {
 	float elapsedTimeInMiliseconds; 
 	cudaEventCreate(&start); 
 	cudaEventCreate(&stop); 
-  
-	// Setup CUDA Streams
-	cudaStream_t operationStream; 
-	cudaStreamCreate(&operationStream); 
 
 	// Setup host memory variables
     cublasInit();
+	
+	// Setup Handle and stream
 	cublasHandle_t handle;
 	cublasCreate(&handle);
+	cudaStream_t operationStream; 
+	cudaStreamCreate(&operationStream);
+	cublasSetStream(handle, operationStream);
 
     float *mA = (float*) malloc(matrixHeight * matrixWidth * sizeof(float));
     float *mB = (float*) malloc(matrixHeight * matrixWidth * sizeof(float));
@@ -55,14 +55,13 @@ void runOperation(int matrixHeight, int matrixWidth) {
 	printMatrix("Matrix A", mA, matrixWidth, matrixHeight);
 	printMatrix("Matrix B", mB, matrixWidth, matrixHeight);
 
-	// Start Stream
-	cublasSetStream(handle, operationStream);
-
 	// Setup device memory variables
 	float* dev_mA; float* dev_mB; float* dev_mC;
 	cublasAlloc(matrixHeight * matrixWidth, sizeof(float), (void**) &dev_mA);
 	cublasAlloc(matrixHeight * matrixWidth, sizeof(float), (void**) &dev_mB);
 	cublasAlloc(matrixHeight * matrixWidth, sizeof(float), (void**) &dev_mC);
+
+	cudaEventRecord(start);
 
 	// Copy matrix from host to device memory
 	cublasSetMatrix(matrixHeight, matrixWidth, sizeof(float), mA, matrixHeight, dev_mA, matrixHeight);
@@ -80,6 +79,7 @@ void runOperation(int matrixHeight, int matrixWidth) {
 
     // Timing Output
 	cudaStreamSynchronize(operationStream);
+	cublasDestroy(handle);
 	cudaEventRecord(stop, 0);
 	cudaEventSynchronize(stop); 
 	cudaEventElapsedTime(&elapsedTimeInMiliseconds, start, stop); 
@@ -95,7 +95,6 @@ void runOperation(int matrixHeight, int matrixWidth) {
 	cublasFree(dev_mA);
 	cublasFree(dev_mB);
 	cublasFree(dev_mC);
-	cublasDestroy(handle);
 	cublasShutdown();
 }
 
