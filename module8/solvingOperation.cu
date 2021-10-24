@@ -1,91 +1,126 @@
 #include <stdio.h>
-#include <time.h>
+#include <cublas.h>
+#include <cublas_v2.h>
+#include <cusolverDn.h>
+
 #define indexCalculation(i,j,ld) (((j)*(ld))+(i))
 
 /**
 * printMatrix: A method that takes in a matrix and its dimentions and it prints
 */
-void printMatrix(const char* name, float *matrix, int matrixWidth, int matrixHeight) {
+void printMatrix(const char* name, double *matrix, int matrixWidth, int matrixHeight) {
 	printf("\n%s: [ ", name);
 	for(int i = 0 ; i < matrixHeight ; i++) {
 		printf("\n");
 		for(int j = 0 ; j < matrixWidth ; j++) {
-			printf("%f ,", matrix[indexCalculation(i, j, matrixHeight)]);
+			printf("%f, ", matrix[indexCalculation(i, j, matrixHeight)]);
 		}
 	}
-	printf(" ]", name);
+	printf("]");
 }
 
 /**
 * runOperation: Taking the number of blocks and threads it does an operation on the two 
 * given matrices and prints their results.
 */
-void runOperation(int matrixHeight, int matrixWidth) { 
+void runOperation(int matrixHeight, int matrixWidth, int nrhs) { 
     
 	// Setup Timing Variables
 	cudaEvent_t start, stop; 
 	float elapsedTimeInMiliseconds; 
 	cudaEventCreate(&start); 
 	cudaEventCreate(&stop); 
-  
-	// Setup CUDA Streams
-	cudaStream_t operationStream; 
-	cudaStreamCreate(&operationStream); 
-  
+
 	// Setup host memory variables
     cublasInit();
+	
+	// Setup Handle and stream
+	cublasHandle_t handle;
+	cublasCreate(&handle);
+	cusolverDnHandle_t solver;
+	cusolverDnCreate(&solver);
+	cudaStream_t operationStream; 
+	cudaStreamCreate(&operationStream);
+	cublasSetStream(handle, operationStream);
 
-    float *mA = (float*) malloc(matrixHeight * matrixWidth * sizeof(float));
-    float *mB = (float*) malloc(matrixHeight * matrixWidth * sizeof(float));
-    float *mC = (float*) malloc(matrixHeight * matrixWidth * sizeof(float));
+    double *mA = (double*) malloc(matrixHeight * matrixWidth * sizeof(double));
+    double *vB = (double*) malloc(matrixHeight * nrhs * sizeof(double));
+    double *mX = (double*) malloc(matrixHeight * nrhs * sizeof(double));
 
     for (int i = 0 ; i < matrixHeight ; i++) {
-      	for (int j = 0 ; j < matrixWidth ; j++) {
-        	A[index(i,j,matrixHeight)] = (float) index(i,j,matrixHeight);
-			B[index(i,j,matrixHeight)] = (float) index(i,j,matrixHeight); 
+      	for (int j = 0 ; j < nrhs ; j++) {
+        	mA[indexCalculation(i,j,matrixHeight)] = (double) indexCalculation(i,j,matrixHeight);
 		}   
+		for (int j = 0 ; j < matrixWidth ; j++) {
+			vB[indexCalculation(i,j,matrixHeight)] = (double) indexCalculation(i,j,matrixHeight); 
+		}   
+
 	}
     
 	// Turned off to minimize printing
 	printMatrix("Matrix A", mA, matrixWidth, matrixHeight);
-	printMatrix("Matrix B", mB, matrixWidth, matrixHeight);
-
-	// Start Stream
-	cublasSetStream(operationStream);
+	printMatrix("Vector B", vB, nrhs, matrixHeight);
 
 	// Setup device memory variables
-	float* dev_mA; float* dev_mB; float* dev_mC;
-	cublasAlloc(matrixHeight * matrixWidth, sizeof(float), (void**) &dev_mA);
-	cublasAlloc(matrixHeight * matrixWidth, sizeof(float), (void**) &dev_mB);
-	cublasAlloc(matrixHeight * matrixWidth, sizeof(float), (void**) &dev_mC);
+	int* dev_Info; 
+	int  lwork = 0; 
+	double* dev_mA; double* dev_vB; double* dev_tau; double *dev_work;
+	const double one = 1;
 
-	// Copy matrix from host to device memory
-	cublasSetMatrix(matrixHeight, matrixWidth, sizeof(float), mA, matrixHeight, dev_mA, matrixHeight);
-	cublasSetMatrix(matrixHeight, matrixWidth, sizeof(float), mB, matrixHeight, dev_mB, matrixHeight);
+	cudaMalloc((void**) &dev_mA  , sizeof(double) * matrixHeight * matrixWidth);
+    cudaMalloc((void**) &dev_tau, sizeof(double) * matrixHeight);
+    cudaMalloc((void**) &dev_vB  , sizeof(double) * matrixHeight * nrhs);
+    cudaMalloc((void**) &dev_Info, sizeof(int));
 
-    // Execute Multiplication
-    cublasSgemm('n','n', matrixHeight, matrixWidth, matrixWidth,1 /* Alpha */, dev_mA, matrixHeight, dev_mB, matrixHeight, 0 /* Beta */, dev_mC, matrixHeight);
+	cudaEventRecord(start);
 
-	// Get result
-    cublasGetMatrix(matrixHeight, matrixWidth, sizeof(float), dev_mC, matrixHeight, mC, matrixHeight);
+    cudaMemcpy(dev_mA, mA, sizeof(double) * matrixHeight * matrixWidth, cudaMemcpyHostToDevice);
+    cudaMemcpy(dev_vB, vB, sizeof(double) * matrixHeight * nrhs, cudaMemcpyHostToDevice);
+ 
+	// Query working space of geqrf and ormqr
+    cusolverDnDgeqrf_bufferSize(solver, matrixHeight, matrixWidth, dev_mA, matrixHeight, &lwork);
+	cudaMalloc((void**) &dev_Info, sizeof(double) * lwork);
+
+	// Compute QR factorization
+	cusolverDnDgeqrf(solver, matrixHeight, matrixWidth, dev_mA, matrixHeight, dev_tau, dev_work, lwork, dev_Info);
+    cudaDeviceSynchronize();
+
+	// Compute Q^T*B
+    cusolverDnDormqr(solver, CUBLAS_SIDE_LEFT, CUBLAS_OP_T, matrixHeight, nrhs, matrixWidth, dev_mA, matrixHeight,
+        dev_tau, dev_vB, matrixHeight, dev_work, lwork, dev_Info);
+    cudaDeviceSynchronize();
+
+	// Compute x = R \ Q^T*B
+
+    cublasDtrsm(handle, CUBLAS_SIDE_LEFT, CUBLAS_FILL_MODE_UPPER, CUBLAS_OP_N, CUBLAS_DIAG_NON_UNIT, matrixHeight,
+        nrhs, &one, dev_mA, matrixHeight, dev_vB, matrixHeight);
+    cudaDeviceSynchronize();
+
+    cudaMemcpy(mX, dev_vB, sizeof(double) * matrixHeight * nrhs, cudaMemcpyDeviceToHost);
 
     // Timing Output
 	cudaStreamSynchronize(operationStream);
+	cublasDestroy(handle);
+	cusolverDnDestroy(solver);
 	cudaEventRecord(stop, 0);
 	cudaEventSynchronize(stop); 
 	cudaEventElapsedTime(&elapsedTimeInMiliseconds, start, stop); 
-  	printf("Stream and Event Time: %f Miliseconds\n", elapsedTimeInMiliseconds) * 100;
 
   	// Turned off to minimize printing
-	printMatrix("Matrix C", mC, matrixWidth, matrixHeight);
+	printMatrix("Result X", mX, nrhs, matrixHeight);
+	printf("\nStream and Event Time: %f Miliseconds\n", elapsedTimeInMiliseconds) * 100;
 
 	// Free reserved memory
     free(mA); 
-	free(mB);
-	free(mC);
-	cublasFree(dev_mA);
-	cublasFree(dev_mB);
-	cublasFree(dev_mC);
+	free(vB);
+	free(mX);
+	cudaFree(dev_mA);
+	cudaFree(dev_vB);
+	cudaFree(dev_tau);
+	cudaFree(dev_work);
+	cudaFree(dev_Info);
+	cublasShutdown();
+	cudaDeviceReset();
 }
 
 int main(int argc, char** argv) {
@@ -98,7 +133,7 @@ int main(int argc, char** argv) {
 
 	printf("\nMatrix Width and Height: %d\n", matrixHeight);
 	
-	runOperations(matrixHeight, matrixHeight);
+	runOperation(matrixHeight, matrixHeight, 1);
 
 	return 0;
 }

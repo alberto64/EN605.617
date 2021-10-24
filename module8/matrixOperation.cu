@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <time.h>
 #include <cublas.h>
 #include <cublas_v2.h>
 #define indexCalculation(i,j,ld) (((j)*(ld))+(i))
@@ -83,10 +82,10 @@ void runOperation(int matrixHeight, int matrixWidth) {
 	cudaEventRecord(stop, 0);
 	cudaEventSynchronize(stop); 
 	cudaEventElapsedTime(&elapsedTimeInMiliseconds, start, stop); 
-  	printf("Stream and Event Time: %f Miliseconds\n", elapsedTimeInMiliseconds) * 100;
 
   	// Turned off to minimize printing
 	printMatrix("Matrix C", mC, matrixWidth, matrixHeight);
+	printf("\nStream and Event Time: %f Miliseconds\n", elapsedTimeInMiliseconds) * 100;
 
 	// Free reserved memory
     free(mA); 
