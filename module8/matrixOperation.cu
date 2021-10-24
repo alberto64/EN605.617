@@ -51,8 +51,8 @@ void runOperation(int matrixHeight, int matrixWidth) {
 	}
     
 	// Turned off to minimize printing
-	printMatrix("Matrix A", mA, matrixWidth, matrixHeight);
-	printMatrix("Matrix B", mB, matrixWidth, matrixHeight);
+	// printMatrix("Matrix A", mA, matrixWidth, matrixHeight);
+	// printMatrix("Matrix B", mB, matrixWidth, matrixHeight);
 
 	// Setup device memory variables
 	float* dev_mA; float* dev_mB; float* dev_mC;
@@ -84,7 +84,7 @@ void runOperation(int matrixHeight, int matrixWidth) {
 	cudaEventElapsedTime(&elapsedTimeInMiliseconds, start, stop); 
 
   	// Turned off to minimize printing
-	printMatrix("Matrix C", mC, matrixWidth, matrixHeight);
+	// printMatrix("Matrix C", mC, matrixWidth, matrixHeight);
 	printf("\nStream and Event Time: %f Miliseconds\n", elapsedTimeInMiliseconds) * 100;
 
 	// Free reserved memory

@@ -1,10 +1,12 @@
-nvcc streamOperations.cu -o stream.sh
+nvcc matrixOperation.cu -lcublas -o matrix.sh
+nvcc solvingOperation.cu -lcublas -lcusolver -o solver.sh
 
-./stream.sh 64 1
+./matrix.sh 4
+./matrix.sh 64
+./matrix.sh 264
+./matrix.sh 
 
-./stream.sh 256 4
-
-./stream.sh 
-
-./stream.sh 6240 520
-
+./solver.sh 4
+./solver.sh 16
+./solver.sh 32
+./solver.sh 64
