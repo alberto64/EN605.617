@@ -48,10 +48,10 @@ void runOperation(int matrixHeight, int matrixWidth, int nrhs) {
     double *mX = (double*) malloc(matrixHeight * nrhs * sizeof(double));
 
     for (int i = 0 ; i < matrixHeight ; i++) {
-      	for (int j = 0 ; j < nrhs ; j++) {
+      	for (int j = 0 ; j < matrixWidth ; j++) {
         	mA[indexCalculation(i,j,matrixHeight)] = (double) indexCalculation(i,j,matrixHeight);
 		}   
-		for (int j = 0 ; j < matrixWidth ; j++) {
+		for (int j = 0 ; j < nrhs; j++) {
 			vB[indexCalculation(i,j,matrixHeight)] = (double) indexCalculation(i,j,matrixHeight); 
 		}   
 
