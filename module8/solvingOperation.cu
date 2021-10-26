@@ -58,8 +58,8 @@ void runOperation(int matrixHeight, int matrixWidth, int nrhs) {
 	}
 	    
 	// Turned off to minimize printing
-	printMatrix("Matrix A", mA, matrixWidth, matrixHeight);
-	printMatrix("Vector B", vB, nrhs, matrixHeight);
+	// printMatrix("Matrix A", mA, matrixWidth, matrixHeight);
+	// printMatrix("Vector B", vB, nrhs, matrixHeight);
 
 	// Setup device memory variables
 	int* dev_Info; 
@@ -83,18 +83,18 @@ void runOperation(int matrixHeight, int matrixWidth, int nrhs) {
 
 	// Compute QR factorization
 	cusolverDnDgeqrf(solver, matrixHeight, matrixWidth, dev_mA, matrixHeight, dev_tau, dev_work, lwork, dev_Info);
-    // cudaDeviceSynchronize();
+    cudaDeviceSynchronize();
 
 	// Compute Q^T*B
     cusolverDnDormqr(solver, CUBLAS_SIDE_LEFT, CUBLAS_OP_T, matrixHeight, nrhs, matrixWidth, dev_mA, matrixHeight,
         dev_tau, dev_vB, matrixHeight, dev_work, lwork, dev_Info);
-    // cudaDeviceSynchronize();
+    cudaDeviceSynchronize();
 
 	// Compute x = R \ Q^T*B
 
     cublasDtrsm(handle, CUBLAS_SIDE_LEFT, CUBLAS_FILL_MODE_UPPER, CUBLAS_OP_N, CUBLAS_DIAG_NON_UNIT, matrixHeight,
         nrhs, &one, dev_mA, matrixHeight, dev_vB, matrixHeight);
-    // cudaDeviceSynchronize();
+    cudaDeviceSynchronize();
 
     cudaMemcpy(mX, dev_vB, sizeof(double) * matrixHeight * nrhs, cudaMemcpyDeviceToHost);
 
@@ -107,7 +107,7 @@ void runOperation(int matrixHeight, int matrixWidth, int nrhs) {
 	cudaEventElapsedTime(&elapsedTimeInMiliseconds, start, stop); 
 
   	// Turned off to minimize printing
-	printMatrix("Result X", mX, nrhs, matrixHeight);
+	// printMatrix("Result X", mX, nrhs, matrixHeight);
 	printf("\nStream and Event Time: %f Miliseconds\n", elapsedTimeInMiliseconds) * 100;
 
 	// Free reserved memory
@@ -124,7 +124,7 @@ void runOperation(int matrixHeight, int matrixWidth, int nrhs) {
 }
 
 int main(int argc, char** argv) {
-	int matrixHeight = 1024;
+	int matrixHeight = 64;
 
 	// read command line arguments
 	if (argc >= 2) {

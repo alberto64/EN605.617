@@ -9,4 +9,4 @@ nvcc solvingOperation.cu -lcublas -lcusolver -o solver.sh
 ./solver.sh 4
 ./solver.sh 16
 ./solver.sh 32
-./solver.sh 64
+./solver.sh
