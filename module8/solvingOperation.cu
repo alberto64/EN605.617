@@ -23,7 +23,7 @@ void printMatrix(const char* name, double *matrix, int matrixWidth, int matrixHe
 * runOperation: Taking the number of blocks and threads it does an operation on the two 
 * given matrices and prints their results.
 */
-void runOperation(int dd, int dds, int dda) { 
+void runOperation(int matrixHeight, int matrixWidth, int nrhs) { 
     
 	// Setup Timing Variables
 	cudaEvent_t start, stop; 
@@ -43,31 +43,23 @@ void runOperation(int dd, int dds, int dda) {
 	cudaStreamCreate(&operationStream);
 	cublasSetStream(handle, operationStream);
 
-    // double *mA = (double*) malloc(matrixHeight * matrixWidth * sizeof(double));
-    // double *vB = (double*) malloc(matrixHeight * nrhs * sizeof(double));
-    // double *mX = (double*) malloc(matrixHeight * nrhs * sizeof(double));
+    double *mA = (double*) malloc(matrixHeight * matrixWidth * sizeof(double));
+    double *vB = (double*) malloc(matrixHeight * nrhs * sizeof(double));
+    double *mX = (double*) malloc(matrixHeight * nrhs * sizeof(double));
 
-    // for (int i = 0 ; i < matrixHeight ; i++) {
-    //   	for (int j = 0 ; j < matrixWidth ; j++) {
-    //     	mA[indexCalculation(i,j,matrixHeight)] = (double) indexCalculation(i,j,matrixHeight);
-	// 	}   
-	// 	for (int j = 0 ; j < nrhs; j++) {
-	// 		vB[indexCalculation(i,j,matrixHeight)] = (double) indexCalculation(i,j,matrixHeight); 
-	// 	}   
+    for (int i = 0 ; i < matrixHeight ; i++) {
+      	for (int j = 0 ; j < matrixWidth ; j++) {
+        	mA[indexCalculation(i,j,matrixHeight)] = (double) indexCalculation(i,j,matrixHeight);
+		}   
+		for (int j = 0 ; j < nrhs; j++) {
+			vB[indexCalculation(i,j,matrixHeight)] = (double) indexCalculation(i,j,matrixHeight); 
+		}   
 
-	// }
-	
-	const int matrixHeight = 3;
-	const int matrixWidth = 3;
-	const int nrhs = 1;
-	double mA[matrixHeight * matrixWidth] = { 1.0, 4.0, 2.0, 2.0, 5.0, 1.0, 3.0, 6.0, 1.0}; 
-	//    double X[ldb*nrhs] = { 1.0, 1.0, 1.0}; // exact solution
-	double vB[matrixHeight*nrhs] = { 6.0, 15.0, 4.0}; 
-	double mX[matrixHeight*nrhs]; // solution matrix from GPU
-    
+	}
+	    
 	// Turned off to minimize printing
-	// printMatrix("Matrix A", mA, matrixWidth, matrixHeight);
-	// printMatrix("Vector B", vB, nrhs, matrixHeight);
+	printMatrix("Matrix A", mA, matrixWidth, matrixHeight);
+	printMatrix("Vector B", vB, nrhs, matrixHeight);
 
 	// Setup device memory variables
 	int* dev_Info; 
