@@ -56,7 +56,10 @@ void runOperation(int matrixHeight, int matrixWidth, int nrhs) {
 	// 	}   
 
 	// }
-
+	
+	matrixHeight = 3;
+	matrixWidth = 3;
+	nrhs = 1;
 	double mA[matrixHeight * matrixWidth] = { 1.0, 4.0, 2.0, 2.0, 5.0, 1.0, 3.0, 6.0, 1.0}; 
 	//    double X[ldb*nrhs] = { 1.0, 1.0, 1.0}; // exact solution
 	double vB[matrixHeight*nrhs] = { 6.0, 15.0, 4.0}; 
@@ -84,7 +87,7 @@ void runOperation(int matrixHeight, int matrixWidth, int nrhs) {
  
 	// Query working space of geqrf and ormqr
     cusolverDnDgeqrf_bufferSize(solver, matrixHeight, matrixWidth, dev_mA, matrixHeight, &lwork);
-	cudaMalloc((void**) &dev_Info, sizeof(double) * lwork);
+	cudaMalloc((void**) &dev_work, sizeof(double) * lwork);
 
 	// Compute QR factorization
 	cusolverDnDgeqrf(solver, matrixHeight, matrixWidth, dev_mA, matrixHeight, dev_tau, dev_work, lwork, dev_Info);
