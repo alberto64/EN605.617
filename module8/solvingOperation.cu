@@ -43,19 +43,24 @@ void runOperation(int matrixHeight, int matrixWidth, int nrhs) {
 	cudaStreamCreate(&operationStream);
 	cublasSetStream(handle, operationStream);
 
-    double *mA = (double*) malloc(matrixHeight * matrixWidth * sizeof(double));
-    double *vB = (double*) malloc(matrixHeight * nrhs * sizeof(double));
-    double *mX = (double*) malloc(matrixHeight * nrhs * sizeof(double));
+    // double *mA = (double*) malloc(matrixHeight * matrixWidth * sizeof(double));
+    // double *vB = (double*) malloc(matrixHeight * nrhs * sizeof(double));
+    // double *mX = (double*) malloc(matrixHeight * nrhs * sizeof(double));
 
-    for (int i = 0 ; i < matrixHeight ; i++) {
-      	for (int j = 0 ; j < matrixWidth ; j++) {
-        	mA[indexCalculation(i,j,matrixHeight)] = (double) indexCalculation(i,j,matrixHeight);
-		}   
-		for (int j = 0 ; j < nrhs; j++) {
-			vB[indexCalculation(i,j,matrixHeight)] = (double) indexCalculation(i,j,matrixHeight); 
-		}   
+    // for (int i = 0 ; i < matrixHeight ; i++) {
+    //   	for (int j = 0 ; j < matrixWidth ; j++) {
+    //     	mA[indexCalculation(i,j,matrixHeight)] = (double) indexCalculation(i,j,matrixHeight);
+	// 	}   
+	// 	for (int j = 0 ; j < nrhs; j++) {
+	// 		vB[indexCalculation(i,j,matrixHeight)] = (double) indexCalculation(i,j,matrixHeight); 
+	// 	}   
 
-	}
+	// }
+
+	double mA[matrixHeight * matrixWidth] = { 1.0, 4.0, 2.0, 2.0, 5.0, 1.0, 3.0, 6.0, 1.0}; 
+	//    double X[ldb*nrhs] = { 1.0, 1.0, 1.0}; // exact solution
+	double vB[matrixHeight*nrhs] = { 6.0, 15.0, 4.0}; 
+	double mX[matrixHeight*nrhs]; // solution matrix from GPU
     
 	// Turned off to minimize printing
 	// printMatrix("Matrix A", mA, matrixWidth, matrixHeight);
