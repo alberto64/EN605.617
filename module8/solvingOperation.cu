@@ -23,7 +23,7 @@ void printMatrix(const char* name, double *matrix, int matrixWidth, int matrixHe
 * runOperation: Taking the number of blocks and threads it does an operation on the two 
 * given matrices and prints their results.
 */
-void runOperation(int matrixHeight, int matrixWidth, int nrhs) { 
+void runOperation(int dd, int dds, int dda) { 
     
 	// Setup Timing Variables
 	cudaEvent_t start, stop; 
@@ -57,9 +57,9 @@ void runOperation(int matrixHeight, int matrixWidth, int nrhs) {
 
 	// }
 	
-	matrixHeight = 3;
-	matrixWidth = 3;
-	nrhs = 1;
+	const int matrixHeight = 3;
+	const int matrixWidth = 3;
+	const int nrhs = 1;
 	double mA[matrixHeight * matrixWidth] = { 1.0, 4.0, 2.0, 2.0, 5.0, 1.0, 3.0, 6.0, 1.0}; 
 	//    double X[ldb*nrhs] = { 1.0, 1.0, 1.0}; // exact solution
 	double vB[matrixHeight*nrhs] = { 6.0, 15.0, 4.0}; 
