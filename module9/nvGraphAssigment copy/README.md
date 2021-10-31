@@ -1,0 +1,1 @@
+Run `./run.sh` to start a set of tests to compare timing using of using thrust with different array sizes.
