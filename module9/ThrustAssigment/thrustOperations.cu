@@ -49,7 +49,7 @@ void printArray(const char* name, thrust::host_vector<int>& array, int size) {
 * runOperations: Taking the number of blocks and threads it does 4 operations on the two 
 * given arrays and prints their results.
 */
-void runOperations(int numBlocks, int totalThreads) { 
+void runOperations(int vectorLength) { 
     
 	// Setup Timing Variables
 	cudaEvent_t start, stop; 
@@ -58,11 +58,11 @@ void runOperations(int numBlocks, int totalThreads) {
 	cudaEventCreate(&stop); 
   
 	// Setup host memory variables
-    thrust::host_vector<int> host_threadCountList(totalThreads);
-	thrust::host_vector<int> host_randNumberList(totalThreads);
+    thrust::host_vector<int> host_threadCountList(vectorLength);
+	thrust::host_vector<int> host_randNumberList(vectorLength);
 
 	// Populate host inputs
-	for(int idx = 0; idx < totalThreads; idx++) { 
+	for(int idx = 0; idx < vectorLength; idx++) { 
 		host_threadCountList[idx] = idx; 
 		host_randNumberList[idx] = rand() % 4; 
 	} 
@@ -70,11 +70,11 @@ void runOperations(int numBlocks, int totalThreads) {
 	// Setup device memory variables
 	thrust::device_vector<int> device_threadCountList = host_threadCountList;
 	thrust::device_vector<int> device_randNumberList = host_randNumberList;
-	thrust::device_vector<int> device_resultList(totalThreads);
+	thrust::device_vector<int> device_resultList(vectorLength);
 
 	// Turned of to minimize printing
-	printArray("Thread Count", host_threadCountList, totalThreads);
-	printArray("Random Numbers", host_randNumberList, totalThreads);
+	// printArray("Thread Count", host_threadCountList, vectorLength);
+	// printArray("Random Numbers", host_randNumberList, vectorLength);
 
 	// Start event
 	cudaEventRecord(start);
@@ -95,42 +95,28 @@ void runOperations(int numBlocks, int totalThreads) {
   	cudaEventRecord(stop, 0);
   	cudaEventSynchronize(stop); 
   	cudaEventElapsedTime(&elapsedTimeInMiliseconds, start, stop); 
-	printf("Stream and Event Time: %f Miliseconds\n", elapsedTimeInMiliseconds) * 100;
+	printf("Operations Event Time: %f Miliseconds\n", elapsedTimeInMiliseconds) * 100;
 
 	// Turned of to minimize printing
-	printArray("Add Result", host_addResultList, totalThreads);
-	printArray("Sub Result", host_subResultList, totalThreads);
-	printArray("Mult Result", host_multResultList, totalThreads);
-	printArray("Mod Result", host_modResultList, totalThreads);
+	// printArray("Add Result", host_addResultList, vectorLength);
+	// printArray("Sub Result", host_subResultList, vectorLength);
+	// printArray("Mult Result", host_multResultList, vectorLength);
+	// printArray("Mod Result", host_modResultList, vectorLength);
 }
 
 int main(int argc, char** argv) {
 	// Based on the work of Andrew Krepps
 	// Set default values in case arguments don't come in command line.
-	int totalThreads = 1024;
-	int blockSize = 256;
+	int vectorLength = 1024;
 
 	// read command line arguments
 	if (argc >= 2) {
-		totalThreads = atoi(argv[1]);
-	}
-	if (argc >= 3) {
-		blockSize = atoi(argv[2]);
+		vectorLength = atoi(argv[1]);
 	}
 
-	int numBlocks = totalThreads/blockSize;
-
-	// validate command line arguments
-	if (totalThreads % blockSize != 0) {
-		++numBlocks;
-		totalThreads = numBlocks*blockSize;
-		
-		printf("Warning: Total thread count is not evenly divisible by the block size\n");
-		printf("The total number of threads will be rounded up to %d\n", totalThreads);
-	}
-	printf("\nTotal Threads: %d\nBlock Size: %d\n", totalThreads, blockSize);
+	printf("\nVector Size: %d\n", vectorLength);
 	
-	runOperations(numBlocks, totalThreads);
+	runOperations(vectorLength);
 
 	return 0;
 }

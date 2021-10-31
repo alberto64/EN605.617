@@ -1,10 +1,10 @@
-nvcc streamOperations.cu -o stream.sh
+nvcc thrustOperations.cu -o thrust.sh
 
-./stream.sh 64 1
+./thrust.sh 64
 
-./stream.sh 256 4
+./thrust.sh 256
 
-./stream.sh 
+./thrust.sh 
 
-./stream.sh 6240 520
+./thrust.sh 6240
 
