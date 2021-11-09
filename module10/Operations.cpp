@@ -265,11 +265,11 @@ void operation(const char *cl_name, const char *kernel_name, const int ARRAY_SIZ
                                  0, NULL, NULL);
 
 
-    // Output the result buffer
-    for (int i = 0; i < ARRAY_SIZE; i++)
-    {
-        std::cout << result[i] << " ";
-    }
+    // Output the result buffer (Turned off to minimize printing)
+    // for (int i = 0; i < ARRAY_SIZE; i++)
+    // {
+    //     std::cout << result[i] << " ";
+    // }
     std::cout << std::endl;
     std::cout << "Executed program succesfully." << std::endl;
     Cleanup(context, commandQueue, program, kernel, memObjects);
@@ -292,14 +292,14 @@ int main(int argc, char** argv)
     cout << "Total Array Size: " << size << endl;
 
     auto start = high_resolution_clock::now();
-    // operation("Add.cl", "add", size);
-    // operation("Substract.cl", "sub", size);
-    // operation("Multiply.cl", "mult", size);
-    // operation("Divide.cl", "div", size);
+    operation("Add.cl", "add", size);
+    operation("Substract.cl", "sub", size);
+    operation("Multiply.cl", "mult", size);
+    operation("Divide.cl", "div", size);
     operation("Power.cl", "power", size);
     auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<microseconds>(stop - start);
+    auto duration = duration_cast<milliseconds>(stop - start);
 
-    cout << "Time taken by operations: " << duration.count() << " microseconds" << endl;
+    cout << "Time taken by operations: " << duration.count() << " milliseconds" << endl;
     return 0;
 }
