@@ -270,8 +270,8 @@ void operation(const char *cl_name, const char *kernel_name, const int ARRAY_SIZ
     // {
     //     std::cout << result[i] << " ";
     // }
-    std::cout << std::endl;
-    std::cout << "Executed program succesfully." << std::endl;
+    // std::cout << std::endl;
+    // std::cout << "Executed program succesfully." << std::endl;
     Cleanup(context, commandQueue, program, kernel, memObjects);
 }
 
