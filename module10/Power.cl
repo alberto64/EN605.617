@@ -9,5 +9,6 @@ __kernel void power(__global const float *a,
     while(count < b[gid]) 
     {
         result[gid] = result[gid] * a[gid];
+        count = count + 1;
     }
 }
