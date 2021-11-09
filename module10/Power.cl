@@ -1,5 +1,5 @@
 
-__kernel void pow(__global const float *a,
+__kernel void power(__global const float *a,
 						__global const float *b,
 						__global float *result)
 {

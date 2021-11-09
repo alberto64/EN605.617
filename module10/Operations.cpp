@@ -1,6 +1,9 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <chrono>
+using namespace std;
+using namespace std::chrono;
 
 #ifdef __APPLE__
 #include <OpenCL/cl.h>
@@ -208,7 +211,7 @@ void Cleanup(cl_context context, cl_command_queue commandQueue,
 
 void operation(const char *cl_name, const char *kernel_name, const int ARRAY_SIZE) {
 
-        cl_context context = 0;
+    cl_context context = 0;
     cl_command_queue commandQueue = 0;
     cl_program program = 0;
     cl_device_id device = 0;
@@ -286,13 +289,17 @@ int main(int argc, char** argv)
 		size = atoi(argv[1]);
 	}
 
-	printf("\nTotal Array Size: %d\n", size);
+    cout << "Total Array Size: " << size << endl;
 
-    operation("Add.cl", "add", size);
-    operation("Substract.cl", "sub", size);
-    operation("Multiply.cl", "mult", size);
-    operation("Divide.cl", "div", size);
-    operation("Power.cl", "pow", size);
+    auto start = high_resolution_clock::now();
+    // operation("Add.cl", "add", size);
+    // operation("Substract.cl", "sub", size);
+    // operation("Multiply.cl", "mult", size);
+    // operation("Divide.cl", "div", size);
+    operation("Power.cl", "power", size);
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
 
+    cout << "Time taken by operations: " << duration.count() << " microseconds" << endl;
     return 0;
 }
