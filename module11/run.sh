@@ -5,7 +5,7 @@ nvcc assignment.cpp -lOpenCL -std=c++11 -o assignment.o
 
 ./assignment.o 100 10
 
-./assignment.o 500 35
+./assignment.o 100 35
 
 
 
