@@ -76,7 +76,7 @@ void convolution(const unsigned int inputSignalSize, const unsigned int filterSi
 	cl_uint inputSignal[inputSignalSize][inputSignalSize];
 	for(int i = 0; i < inputSignalSize; i++) {
 		for(int j = 0; j < inputSignalSize; j++) {
-			inputSignal[i][j] = rand() % 9;
+			inputSignal[i][j] = (rand() + 1) % 10;
 		}
 	}
 
@@ -85,7 +85,7 @@ void convolution(const unsigned int inputSignalSize, const unsigned int filterSi
 	cl_uint mask[filterSize][filterSize];
 	for(int i = 0; i < filterSize; i++) {
 		for(int j = 0; j < filterSize; j++) {
-			mask[i][j] = rand() % 1;
+			mask[i][j] = (rand() + 1) % 2;
 		}
 	}
 
