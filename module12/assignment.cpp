@@ -147,7 +147,6 @@ int main(int argc, char** argv)
         cl_kernel kernel = clCreateKernel(program, "average", &errNum);
 
         errNum = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&buffers[i]);
-        errNum = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *) NUM_SUB_BUFFER_ELEMENTS);
 
         kernels.push_back(kernel);
     }
