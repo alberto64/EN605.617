@@ -17,7 +17,7 @@ __kernel void average(__global * buffer)
 	size_t id = get_global_id(0);
 	int sum = 0;
 	for(int i = 0; i < 4; i++) {
-		sum = buffer[i];
+		sum = sum + buffer[i];
 	}
 	buffer[id] = sum/4;
 }

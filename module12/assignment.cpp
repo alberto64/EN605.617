@@ -127,7 +127,7 @@ int main(int argc, char** argv)
 
     // now for all devices other than the first create a sub-buffer
     for (unsigned int i = 0; i < numDevices; i++) {
-        cl_buffer_region region = {NUM_SUB_BUFFER_ELEMENTS * i * sizeof(int), NUM_SUB_BUFFER_ELEMENTS * sizeof(int)};
+        cl_buffer_region region = {NUM_SUB_BUFFER_ELEMENTS * i * sizeof(int), NUM_BUFFER_ELEMENTS * sizeof(int)};
         cl_mem buffer = clCreateSubBuffer(main_buffer,
             CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION,
             &region, &errNum);
