@@ -53,7 +53,7 @@ int main(int argc, char** argv)
     std::vector<cl_command_queue> queues;
     std::vector<cl_mem> buffers;
     int * inputOutput;
-    char** FILTER_LIST[3] = {"average", "square", "cube"};
+    const char* FILTER_LIST[3] = {"average", "square", "cube"};
 
     int platform = DEFAULT_PLATFORM; 
     bool useMap  = DEFAULT_USE_MAP;
@@ -127,7 +127,7 @@ int main(int argc, char** argv)
 
         queues.push_back(queue);
 
-        cl_kernel kernel = clCreateKernel(program, &FILTER_LIST[inputModulator % 3], &errNum);
+        cl_kernel kernel = clCreateKernel(program, FILTER_LIST[inputModulator % 3], &errNum);
 
         errNum = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&buffers[i]);
 
