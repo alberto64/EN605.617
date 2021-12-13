@@ -27,8 +27,6 @@
 #define NUM_BUFFER_ELEMENTS 16
 #define NUM_SUB_BUFFER_ELEMENTS 4
 
-#define FILTER_LIST {"average", "square", "cube"}
-
 // Function to check and handle OpenCL errors
 inline void 
 checkErr(cl_int err, const char * name)
@@ -55,6 +53,7 @@ int main(int argc, char** argv)
     std::vector<cl_command_queue> queues;
     std::vector<cl_mem> buffers;
     int * inputOutput;
+    char** FILTER_LIST = {"average", "square", "cube"};
 
     int platform = DEFAULT_PLATFORM; 
     bool useMap  = DEFAULT_USE_MAP;
@@ -72,8 +71,6 @@ int main(int argc, char** argv)
 
  
     platformIDs = (cl_platform_id *)alloca(sizeof(cl_platform_id) * numPlatforms);
-
-    // std::cout << "Number of platforms: \t" << numPlatforms << std::endl; 
 
     clGetPlatformIDs(numPlatforms, platformIDs, NULL);
 
@@ -130,7 +127,7 @@ int main(int argc, char** argv)
 
         queues.push_back(queue);
 
-        cl_kernel kernel = clCreateKernel(program, FILTER_LIST[inputModulator % 3], &errNum);
+        cl_kernel kernel = clCreateKernel(program, &FILTER_LIST[inputModulator % 3], &errNum);
 
         errNum = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&buffers[i]);
 
