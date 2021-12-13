@@ -53,7 +53,7 @@ int main(int argc, char** argv)
     std::vector<cl_command_queue> queues;
     std::vector<cl_mem> buffers;
     int * inputOutput;
-    char** FILTER_LIST = {"average", "square", "cube"};
+    const char** FILTER_LIST[3] = {"average", "square", "cube"};
 
     int platform = DEFAULT_PLATFORM; 
     bool useMap  = DEFAULT_USE_MAP;
