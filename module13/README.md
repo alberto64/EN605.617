@@ -1,0 +1,1 @@
+Run `./run.sh` to start the assignment.
